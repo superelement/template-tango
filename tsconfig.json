@@ -1,0 +1,15 @@
+{
+    "files": [
+    	"typings/index.d.ts",
+    	"typings/custom.d.ts",
+        "src/utils.ts",
+        "src/index.ts",
+        "src/specs.ts"
+    ],
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "target": "es5",
+        "module": "commonjs",
+        "allowJs": true
+    }
+}

@@ -1,0 +1,8 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/types/npm-globby/master/index.d.ts",
+    "raw": "github:types/npm-globby/index.d.ts",
+    "typings": "https://raw.githubusercontent.com/types/npm-globby/master/index.d.ts"
+  }
+}

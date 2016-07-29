@@ -1,0 +1,8 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/replace-ext/replace-ext.d.ts",
+    "raw": "github:DefinitelyTyped/DefinitelyTyped/replace-ext/replace-ext.d.ts",
+    "typings": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/replace-ext/replace-ext.d.ts"
+  }
+}

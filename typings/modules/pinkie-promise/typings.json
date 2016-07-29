@@ -1,0 +1,8 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/typed-typings/npm-pinkie-promise/master/index.d.ts",
+    "raw": "github:typed-typings/npm-pinkie-promise/index.d.ts",
+    "typings": "https://raw.githubusercontent.com/typed-typings/npm-pinkie-promise/master/index.d.ts"
+  }
+}

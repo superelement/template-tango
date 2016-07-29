@@ -1,0 +1,62 @@
+{
+  "name": "bombom",
+  "version": "0.1.2",
+  "description": "Detect, enforce or strip BOM signatures.",
+  "homepage": "https://github.com/jedmao/bombom",
+  "author": {
+    "name": "Jed Mao",
+    "email": "jed.hunsaker+npm@gmail.com"
+  },
+  "main": "lib/api.js",
+  "keywords": [
+    "bom",
+    "signature",
+    "detect",
+    "enforce",
+    "strip",
+    "add",
+    "remove"
+  ],
+  "scripts": {
+    "typescript": "tsc test.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jedmao/bombom.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jedmao/bombom/issues"
+  },
+  "dependencies": {
+    "typescript-require": "^0.2.6"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-flatten": "^0.3.0",
+    "gulp-typescript": "^2.13.6",
+    "run-sequence": "^1.2.2",
+    "tsconfig-glob": "^0.4.3"
+  },
+  "_id": "bombom@0.1.2",
+  "dist": {
+    "shasum": "9ade914a5c99d480e86d159637748ae32f78c63d",
+    "tarball": "http://registry.npmjs.org/bombom/-/bombom-0.1.2.tgz"
+  },
+  "_from": "bombom@>=0.1.2 <0.2.0",
+  "_resolved": "https://registry.npmjs.org/bombom/-/bombom-0.1.2.tgz",
+  "_npmVersion": "1.4.3",
+  "_npmUser": {
+    "name": "jedmao",
+    "email": "jed.hunsaker+npm@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "jedmao",
+      "email": "jed.hunsaker+npm@gmail.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "9ade914a5c99d480e86d159637748ae32f78c63d",
+  "readme": "ERROR: No README data found!"
+}

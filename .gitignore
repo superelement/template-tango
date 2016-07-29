@@ -28,6 +28,7 @@ build/Release
 
 # Dependency directories
 node_modules
+deps/bombom/node_modules
 jspm_packages
 
 # Optional npm cache directory

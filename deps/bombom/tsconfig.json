@@ -1,0 +1,15 @@
+{
+    "files": [
+    	"typings/dt-node/node.d.ts",
+        "typings/bombom.d.ts",
+    	"lib/interfaces/IHashTable.ts",
+        "lib/boms.ts",
+        "lib/Logger.ts",
+        "lib/Bombom.ts"
+    ],
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "target": "es5",
+        "module": "commonjs"
+    }
+}

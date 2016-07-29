@@ -1,0 +1,9 @@
+@{
+	var itemCount = 10;
+}
+<nav>
+	@for(var i=0; i<itemCount; i++)
+	{
+		<a href="#link@i">Link @i</a>
+	}
+</nav>

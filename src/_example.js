@@ -10,7 +10,8 @@ tt.startQuestions({
 		, extension: ".cshtml"
 		, pagesDir: "Views/"
 		, modulesDir: "Components/"
-		, pageExclusions: ["Views/About/*.cshtml"] // glob pattern of files to exclude 
+		, pageExclusions: ["Views/About/*.cshtml"] // glob pattern of files to exclude
+		, subDir: "" 
 	}
 	, frontEnd: {
 		rootDir: "C:/Users/jimd/Documents/repos/template-tango/test-resources/front-end-files/"
@@ -18,6 +19,7 @@ tt.startQuestions({
 		, pagesDir: "Pages/"
 		, modulesDir: "Widgets/"
 		, moduleExclusions: [] // glob pattern of files to exclude
+		, subDir: "tmpl/"
 	}
 }, function() {
 	console.log("Now do other stuff for your production build");

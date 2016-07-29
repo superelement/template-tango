@@ -91,14 +91,16 @@ function getOptsFullPaths(opts:IMergableFiles, type:string, log:boolean = false)
 /**
  * @description Copies a file to a new destination, changing the extension and folder structure and adding original file paths to either a success or error array
  * @param originalFilePath - File to copy from.
- * @param originalPageDir - Part of the file path to swap out with 'newPageDir'.
- * @param newPageDir - New directory path to replace 'originalPageDir'. 
+ * @param originalMainDir - Part of the file path to swap out with 'newMainDir'.
+ * @param newMainDir - New directory path to replace 'originalMainDir'. 
  * @param ext - New extention for the copied file.
+ * @param originalSubDir - Sub-directory from original target template.
+ * @param newSubDir - Sub-directory for target template.
  * @param cb - Callback on complete, passing boolean for success/fail.
  * @param sucList (optional) - Array of successful file paths (uses originalFilePath).
  * @param errList (optional) - Array of failes file paths (uses originalFilePath).
  */
-function copyToNewFolderStructure(originalFilePath:string, originalPageDir:string, newPageDir:string, ext:string, cb:Function, sucList:Array<string> = null, errList:Array<string> = null):void {
+function copyToNewFolderStructure(originalFilePath:string, originalMainDir:string, newMainDir:string, ext:string, originalSubDir:string, newSubDir:string, cb:Function, sucList:Array<string> = null, errList:Array<string> = null):void {
 
     // fail it if original file doesn't exist
     if(!fs.existsSync(originalFilePath)) {
@@ -107,13 +109,27 @@ function copyToNewFolderStructure(originalFilePath:string, originalPageDir:strin
         return;
     }
 
+    if(originalSubDir)  originalSubDir = ensureTrainlingSlash(originalSubDir);
+    if(newSubDir)       newSubDir = ensureTrainlingSlash(newSubDir);
+
     fs.readFile(originalFilePath, (err:Error, buf:Buffer) => {
         // we add a BOM to each file to avoid differences with Visual Studio created files
         buf = bombom.enforce(buf, "utf8");
-        
+
         // The destination filePath removes the original directory (eg back end) and extension, because they've been replaced (eg. to match the front end ones), which makes them easily comparable
-        var dest = newPageDir + replaceExt( originalFilePath.replace(originalPageDir, ""), ext);
+        var dest = newMainDir + 
+                replaceExt( originalFilePath
+                    .replace(originalMainDir, "") // removes original main directory so it can be replaced with new one
+                , ext)
+
+        dest = normalizePaths(dest); // needs to be called before replacing subDir in path because of slash inconsistency on Windows
+
+        if(originalSubDir) dest = dest.replace( "/" + originalSubDir, "/" ) // removes original subdirectory so it can be replaced with new one 
+
+        var fileName = getFileName(dest);
+        dest = dest.replace( fileName, newSubDir + fileName ); // adds new subdirectory
         
+
         fs.outputFile(dest, buf, (err:Error) => {
             if(err) {
                 if(errList) errList.push(err.message);
@@ -131,6 +147,7 @@ function copyBackToFront(cloneDest:string,
                         beOpts:IMergableFiles,
                         // will write using front end values
                         feExt:string = ".vash",
+                        feSubDir:string = "tmpl/",
                         fePagesDir:string = "Pages/", 
                         feModulesDir:string = "Widgets/"): Promise<ISuccessList> {
     
@@ -165,11 +182,11 @@ function copyBackToFront(cloneDest:string,
         }
 
         backEndPages.forEach((filePath:string) => {
-            copyToNewFolderStructure(filePath, beOpts.rootDir + beOpts.pagesDir, cloneDest + fePagesDir, feExt, checkCount, sucList, errList);
+            copyToNewFolderStructure(filePath, beOpts.rootDir + beOpts.pagesDir, cloneDest + fePagesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList);
         });
 
         backEndModules.forEach((filePath:string) => {
-            copyToNewFolderStructure(filePath, beOpts.rootDir + beOpts.modulesDir, cloneDest + feModulesDir, feExt, checkCount, sucList, errList);
+            copyToNewFolderStructure(filePath, beOpts.rootDir + beOpts.modulesDir, cloneDest + feModulesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList);
         });
     });
 }
@@ -179,6 +196,7 @@ function copyFrontToBack(cloneDest:string,
                         feOpts:IMergableFiles,
                         // will write using front end values
                         beExt:string = ".vash",
+                        beSubDir:string = "",
                         bePagesDir:string = "Views/", 
                         beModulesDir:string = "Components/"): Promise<ISuccessList> {
     
@@ -214,11 +232,11 @@ function copyFrontToBack(cloneDest:string,
         }
 
         fePages.forEach((filePath:string) => {
-            copyToNewFolderStructure(filePath, feOpts.rootDir + feOpts.pagesDir, cloneDest + bePagesDir, beExt, checkCount, sucList, errList);
+            copyToNewFolderStructure(filePath, feOpts.rootDir + feOpts.pagesDir, cloneDest + bePagesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList);
         });
 
         feModules.forEach((filePath:string) => {
-            copyToNewFolderStructure(filePath, feOpts.rootDir + feOpts.modulesDir, cloneDest + beModulesDir, beExt, checkCount, sucList, errList);
+            copyToNewFolderStructure(filePath, feOpts.rootDir + feOpts.modulesDir, cloneDest + beModulesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList);
         });
     });
 }
@@ -232,18 +250,33 @@ function expectFiles(fileList:Array<string>, cb:Function):void {
     });
 }
 
-function getBeyondCompareMessage(type:string, bcPath:string, cloneDest:string, targetDir:string):string {
-    return chalk.bgCyan.white('\n"'+type+'" clone complete.') +
-        chalk.cyan('\n\n Now copy and run this from another command-line before continuing (including quotes) ') + 
-            chalk.bgCyan.white('\n"' + bcPath + '" "' + cloneDest + '" "' + targetDir + '" ') +
-        chalk.cyan('\n\n In Beyond Compare, go to ') + 
-            chalk.bgCyan.white('"Tools -> Import Settings"')+ 
-            chalk.cyan(' and choose the file ') + 
-            chalk.bgCyan.white('"deps/BCSettings.bcpkg"') + 
-            chalk.cyan(' and check all the options. ') +
-            chalk.cyan.bold('You only need to set this once.') +
-        chalk.cyan('\n\n When you\'re finished hit enter.');
+function getBeyondCompareMessage(type:string, col:string, bgCol:string, bcPath:string, cloneDest:string, targetDir:string):string {
+    var colFn:any = (<any>chalk)[col];
+    var bgColFn:any = (<any>chalk)[bgCol]; 
+    return bgColFn.white('\n"'+type+'" clone complete.') +
+        colFn('\n\n Now copy and run this from another command-line before continuing (including quotes) ') + 
+            bgColFn.white('\n"' + bcPath + '" "' + cloneDest + '" "' + targetDir + '" ') +
+        colFn('\n\n In Beyond Compare, go to ') + 
+            bgColFn.white('"Tools -> Import Settings"')+ 
+            colFn(' and choose the file ') + 
+            bgColFn.white('"deps/BCSettings.bcpkg"') + 
+            colFn(' and check all the options. ') +
+            colFn.bold('You only need to set this once.') +
+        colFn('\n\n When you\'re finished hit enter.');
 }
+
+
+function getFileName(filePath:string, inclExt:boolean = true) {
+	filePath = normalizePaths(filePath);
+	
+	var lastSlashIndex = filePath.lastIndexOf("/");
+
+    if(inclExt) return filePath.slice(lastSlashIndex + 1);
+
+    var lastDotIndex = filePath.lastIndexOf(".");
+	return filePath.slice(lastSlashIndex + 1, lastDotIndex);
+}
+
 
 export default {
 	checkVal: checkVal

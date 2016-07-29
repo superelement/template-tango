@@ -14,6 +14,7 @@ export interface IMergableFiles {
     , modulesDir: string
     , pageExclusions: Array<string>
     , moduleExclusions: Array<string>
+    , subDir: string
 }
 
 

@@ -22,7 +22,7 @@ var Questions = (function () {
             {
                 type: 'confirm',
                 name: 'beyondCompare',
-                message: chalk.cyan('Have you got Beyond Compare installed on the command-line? You will need it to run this task. See README.md for setup guide'),
+                message: chalk.magenta('Have you got Beyond Compare installed on the command-line? You will need it to run this task. See README.md for setup guide'),
                 default: true
             },
             {
@@ -42,13 +42,13 @@ var Questions = (function () {
                         console.warn(chalk.red("You answered 'No' to merging 'back to front'. Skipping step."));
                         return false;
                     }
-                    return utils_1.default.copyBackToFront(opts.cloneDest + B2F, opts.backEnd, opts.frontEnd.extension, opts.frontEnd.pagesDir, opts.frontEnd.modulesDir)
+                    return utils_1.default.copyBackToFront(opts.cloneDest + B2F, opts.backEnd, opts.frontEnd.extension, opts.frontEnd.subDir, opts.frontEnd.pagesDir, opts.frontEnd.modulesDir)
                         .then(function (result) {
                         if (result.errList.length) {
                             console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);
                             return false;
                         }
-                        console.log(utils_1.default.getBeyondCompareMessage('Back to front', opts.beyondComparePath, opts.cloneDest + B2F, opts.frontEnd.rootDir));
+                        console.log(utils_1.default.getBeyondCompareMessage('Back to front', "magenta", "bgMagenta", opts.beyondComparePath, opts.cloneDest + B2F, opts.frontEnd.rootDir));
                         return true;
                     });
                 },
@@ -63,19 +63,19 @@ var Questions = (function () {
                         console.warn(chalk.red("You answered 'No' to merging 'front to back'. Skipping step."));
                         return false;
                     }
-                    return utils_1.default.copyFrontToBack(opts.cloneDest + F2B, opts.frontEnd, opts.backEnd.extension, opts.backEnd.pagesDir, opts.backEnd.modulesDir)
+                    return utils_1.default.copyFrontToBack(opts.cloneDest + F2B, opts.frontEnd, opts.backEnd.extension, opts.backEnd.subDir, opts.backEnd.pagesDir, opts.backEnd.modulesDir)
                         .then(function (result) {
                         if (result.errList.length) {
                             console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);
                             return false;
                         }
-                        console.log(utils_1.default.getBeyondCompareMessage('Front to back', opts.beyondComparePath, opts.cloneDest + F2B, opts.backEnd.rootDir));
+                        console.log(utils_1.default.getBeyondCompareMessage('Front to back', "cyan", "bgCyan", opts.beyondComparePath, opts.cloneDest + F2B, opts.backEnd.rootDir));
                         return true;
                     });
                 },
                 type: 'confirm',
                 name: 'frontToBack',
-                message: chalk.cyan("When you're done with forwards merge, press enter to run final step."),
+                message: chalk.magenta("When you're done with forwards merge, press enter to run final step."),
                 default: true
             }
         ]);

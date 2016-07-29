@@ -73,7 +73,7 @@ describe("expectFiles", () => {
 	let fun = utils.expectFiles
 	  , beFiles = TEST_RES + "back-end-files/"
 
-	it("should ", (done:Function) => {
+	it("should expect files to exist", (done:Function) => {
 		utils.expectFiles([
 			beFiles + "Components/SideNav/SideNav.cshtml"
 			, beFiles + "Views/Home/Index.cshtml"
@@ -88,6 +88,7 @@ describe("copyBackToFront", () => {
 	  , beFiles = TEST_RES + "back-end-files/"
 	  , feModulesDir = "Widgets/"
 	  , fePagesDir = "Pages/"
+	  , fsSubDir = "tmpl/"
 	  , beOpts:IMergableFiles = {
 		  rootDir: beFiles
 		, extension: ".cshtml"
@@ -95,19 +96,20 @@ describe("copyBackToFront", () => {
 		, modulesDir: "Components/"
 		, pageExclusions: null
 		, moduleExclusions: null
+		, subDir: ""
 	  };
 
-	it(COPY_FE, (done:Function) => {
+	 it(COPY_FE, (done:Function) => {
 		
-		let p:Promise<string> = fun(TEMP_DIR, beOpts, ".vash", fePagesDir, feModulesDir);
+		let p:Promise<string> = fun(TEMP_DIR, beOpts, ".vash", fsSubDir, fePagesDir, feModulesDir);
 		let fileList:Array<string> = [];
 		p.then(() => {
 			utils.expectFiles([
-				  TEMP_DIR + feModulesDir + "SideNav/SideNav.vash"
-				, TEMP_DIR + fePagesDir + "Home/Index.vash"
-				, TEMP_DIR + fePagesDir + "About/Index.vash"
-				, TEMP_DIR + fePagesDir + "Home/Index.vash"
-				, TEMP_DIR + fePagesDir + "Shared/Header.vash"
+				  TEMP_DIR + feModulesDir + "SideNav/"+ fsSubDir +"SideNav.vash"
+				, TEMP_DIR + fePagesDir + "Home/"+ fsSubDir +"Index.vash"
+				, TEMP_DIR + fePagesDir + "About/"+ fsSubDir +"Index.vash"
+				, TEMP_DIR + fePagesDir + "Home/"+ fsSubDir +"Index.vash"
+				, TEMP_DIR + fePagesDir + "Shared/"+ fsSubDir +"Header.vash"
 			], done);	
 		});
 	})
@@ -117,10 +119,10 @@ describe("copyBackToFront", () => {
 		let _beOpts:IMergableFiles = _.clone(beOpts);
 		_beOpts.pageExclusions = ["Views/**/*.cshtml"]; // glob pattern of files to exclude
 
-		let p:Promise<string> = fun(TEMP_DIR, _beOpts, ".vash", fePagesDir, feModulesDir);
+		let p:Promise<string> = fun(TEMP_DIR, _beOpts, ".vash", fsSubDir, fePagesDir, feModulesDir);
 		let fileList:Array<string> = [];
 		p.then(() => {
-			utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/SideNav.vash"], done);
+			utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/"+ fsSubDir +"SideNav.vash"], done);
 		});
 	})
 })
@@ -139,11 +141,12 @@ describe("copyFrontToBack", () => {
 		, modulesDir: "Widgets/"
 		, pageExclusions: null
 		, moduleExclusions: null
+		, subDir: "tmpl/"
 	  };
 
 	it(COPY_BE, (done:Function) => {
 		
-		let p:Promise<string> = fun(TEMP_DIR, feOpts, ".cshtml", bePagesDir, beModulesDir);
+		let p:Promise<string> = fun(TEMP_DIR, feOpts, ".cshtml", "", bePagesDir, beModulesDir);
 		let fileList:Array<string> = [];
 		p.then(() => {
 			utils.expectFiles([
@@ -162,7 +165,7 @@ describe("copyFrontToBack", () => {
 		let _feOpts:IMergableFiles = _.clone(feOpts);
 		_feOpts.pageExclusions = ["Pages/**/*.vash"]; // glob pattern of files to exclude
 
-		let p:Promise<string> = fun(TEMP_DIR, _feOpts, ".cshtml", bePagesDir, beModulesDir);
+		let p:Promise<string> = fun(TEMP_DIR, _feOpts, ".cshtml", "", bePagesDir, beModulesDir);
 		let fileList:Array<string> = [];
 		p.then(() => {
 			utils.expectFiles([TEMP_DIR + beModulesDir + "SideNav/SideNav.cshtml"], done);
@@ -174,12 +177,14 @@ describe("copyToNewFolderStructure", () => {
 	let fun = utils.testable.copyToNewFolderStructure
 	  , BASE_MSG = "should copy a file to new location and change the extension"
 	  , feFiles = TEST_RES + "front-end-files/"
+	  , feSubDir = "tmpl" // doesn't need trailing slash (it will get added it missed)
+	  , beSubDir = ""
 	  , originalPageDir:string = feFiles + "Pages/"
-	  , originalPagePath:string = originalPageDir + "About/Index.vash"
+	  , originalPagePath:string = originalPageDir + "About/tmpl/Index.vash"
 	  , newPageDir:string = TEMP_DIR + "Views/"
 
 	it("should copy a file to new location and change the extension", (done) => {
-		fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", () => {
+		fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", feSubDir, beSubDir, () => {
 			expect(fs.existsSync(newPageDir + "About/Index.cshtml")).toBe(true)
 			done();
 		})
@@ -188,7 +193,7 @@ describe("copyToNewFolderStructure", () => {
 	it("should add original file path to the 'success array', after copying", (done) => {
 		let successArray:Array<string> = []
 
-		fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", () => {
+		fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", feSubDir, beSubDir, () => {
 			expect(successArray).toContain(originalPagePath)
 			done();
 		}, successArray)
@@ -198,7 +203,7 @@ describe("copyToNewFolderStructure", () => {
 		let originalPagePath:string = originalPageDir + "SomethingThatDoesntExist.vash"
 		  , failArray:Array<string> = []
 
-		fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", () => {
+		fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", feSubDir, beSubDir, () => {
 			expect(failArray).toContain(originalPagePath)
 			done();
 		}, null, failArray)
@@ -216,6 +221,7 @@ describe("getOptsFullPaths", () => {
 		, modulesDir: "Components/"
 		, pageExclusions: [ "Views/Shared/**/*" ]
 		, moduleExclusions: null
+		, subDir: ""
 	  };
 
 	it("should get an array of all back end page file paths, except excluded Shared ones", () => {
@@ -246,7 +252,7 @@ describe("bangUpExclusions", () => {
 describe("XXXX", () => {
 	let fun = utils.XXXX
 
-	it("should ", () => {
+	xit("should ", () => {
 		expect(fun('XXX')).toBe('XXX')
 	})
 })

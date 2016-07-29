@@ -48,7 +48,7 @@ describe("ensureTrainlingSlash", function () {
 });
 describe("expectFiles", function () {
     var fun = utils.expectFiles, beFiles = TEST_RES + "back-end-files/";
-    it("should ", function (done) {
+    it("should expect files to exist", function (done) {
         utils.expectFiles([
             beFiles + "Components/SideNav/SideNav.cshtml",
             beFiles + "Views/Home/Index.cshtml"
@@ -57,34 +57,35 @@ describe("expectFiles", function () {
 });
 describe("copyBackToFront", function () {
     var COPY_FE = "should copy all test resources into temp dist folder and change the directory names and extensions to be front end values";
-    var fun = utils.copyBackToFront, beFiles = TEST_RES + "back-end-files/", feModulesDir = "Widgets/", fePagesDir = "Pages/", beOpts = {
+    var fun = utils.copyBackToFront, beFiles = TEST_RES + "back-end-files/", feModulesDir = "Widgets/", fePagesDir = "Pages/", fsSubDir = "tmpl/", beOpts = {
         rootDir: beFiles,
         extension: ".cshtml",
         pagesDir: "Views/",
         modulesDir: "Components/",
         pageExclusions: null,
-        moduleExclusions: null
+        moduleExclusions: null,
+        subDir: ""
     };
     it(COPY_FE, function (done) {
-        var p = fun(TEMP_DIR, beOpts, ".vash", fePagesDir, feModulesDir);
+        var p = fun(TEMP_DIR, beOpts, ".vash", fsSubDir, fePagesDir, feModulesDir);
         var fileList = [];
         p.then(function () {
             utils.expectFiles([
-                TEMP_DIR + feModulesDir + "SideNav/SideNav.vash",
-                TEMP_DIR + fePagesDir + "Home/Index.vash",
-                TEMP_DIR + fePagesDir + "About/Index.vash",
-                TEMP_DIR + fePagesDir + "Home/Index.vash",
-                TEMP_DIR + fePagesDir + "Shared/Header.vash"
+                TEMP_DIR + feModulesDir + "SideNav/" + fsSubDir + "SideNav.vash",
+                TEMP_DIR + fePagesDir + "Home/" + fsSubDir + "Index.vash",
+                TEMP_DIR + fePagesDir + "About/" + fsSubDir + "Index.vash",
+                TEMP_DIR + fePagesDir + "Home/" + fsSubDir + "Index.vash",
+                TEMP_DIR + fePagesDir + "Shared/" + fsSubDir + "Header.vash"
             ], done);
         });
     });
     it(COPY_FE + ", affecting modules only (excludes pages).", function (done) {
         var _beOpts = _.clone(beOpts);
         _beOpts.pageExclusions = ["Views/**/*.cshtml"]; // glob pattern of files to exclude
-        var p = fun(TEMP_DIR, _beOpts, ".vash", fePagesDir, feModulesDir);
+        var p = fun(TEMP_DIR, _beOpts, ".vash", fsSubDir, fePagesDir, feModulesDir);
         var fileList = [];
         p.then(function () {
-            utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/SideNav.vash"], done);
+            utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/" + fsSubDir + "SideNav.vash"], done);
         });
     });
 });
@@ -96,10 +97,11 @@ describe("copyFrontToBack", function () {
         pagesDir: "Pages/",
         modulesDir: "Widgets/",
         pageExclusions: null,
-        moduleExclusions: null
+        moduleExclusions: null,
+        subDir: "tmpl/"
     };
     it(COPY_BE, function (done) {
-        var p = fun(TEMP_DIR, feOpts, ".cshtml", bePagesDir, beModulesDir);
+        var p = fun(TEMP_DIR, feOpts, ".cshtml", "", bePagesDir, beModulesDir);
         var fileList = [];
         p.then(function () {
             utils.expectFiles([
@@ -114,7 +116,7 @@ describe("copyFrontToBack", function () {
     it(COPY_BE + ", affecting modules only (excludes pages).", function (done) {
         var _feOpts = _.clone(feOpts);
         _feOpts.pageExclusions = ["Pages/**/*.vash"]; // glob pattern of files to exclude
-        var p = fun(TEMP_DIR, _feOpts, ".cshtml", bePagesDir, beModulesDir);
+        var p = fun(TEMP_DIR, _feOpts, ".cshtml", "", bePagesDir, beModulesDir);
         var fileList = [];
         p.then(function () {
             utils.expectFiles([TEMP_DIR + beModulesDir + "SideNav/SideNav.cshtml"], done);
@@ -122,23 +124,24 @@ describe("copyFrontToBack", function () {
     });
 });
 describe("copyToNewFolderStructure", function () {
-    var fun = utils.testable.copyToNewFolderStructure, BASE_MSG = "should copy a file to new location and change the extension", feFiles = TEST_RES + "front-end-files/", originalPageDir = feFiles + "Pages/", originalPagePath = originalPageDir + "About/Index.vash", newPageDir = TEMP_DIR + "Views/";
+    var fun = utils.testable.copyToNewFolderStructure, BASE_MSG = "should copy a file to new location and change the extension", feFiles = TEST_RES + "front-end-files/", feSubDir = "tmpl" // doesn't need trailing slash (it will get added it missed)
+    , beSubDir = "", originalPageDir = feFiles + "Pages/", originalPagePath = originalPageDir + "About/tmpl/Index.vash", newPageDir = TEMP_DIR + "Views/";
     it("should copy a file to new location and change the extension", function (done) {
-        fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", function () {
+        fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", feSubDir, beSubDir, function () {
             expect(fs.existsSync(newPageDir + "About/Index.cshtml")).toBe(true);
             done();
         });
     });
     it("should add original file path to the 'success array', after copying", function (done) {
         var successArray = [];
-        fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", function () {
+        fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", feSubDir, beSubDir, function () {
             expect(successArray).toContain(originalPagePath);
             done();
         }, successArray);
     });
     it("should add original file path to the 'error array', after failing to copy", function (done) {
         var originalPagePath = originalPageDir + "SomethingThatDoesntExist.vash", failArray = [];
-        fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", function () {
+        fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", feSubDir, beSubDir, function () {
             expect(failArray).toContain(originalPagePath);
             done();
         }, null, failArray);
@@ -151,7 +154,8 @@ describe("getOptsFullPaths", function () {
         pagesDir: "Views/",
         modulesDir: "Components/",
         pageExclusions: ["Views/Shared/**/*"],
-        moduleExclusions: null
+        moduleExclusions: null,
+        subDir: ""
     };
     it("should get an array of all back end page file paths, except excluded Shared ones", function () {
         var pages = fun(beOpts, 'page', true);
@@ -174,7 +178,7 @@ describe("bangUpExclusions", function () {
 describe("XXXX", () => {
     let fun = utils.XXXX
 
-    it("should ", () => {
+    xit("should ", () => {
         expect(fun('XXX')).toBe('XXX')
     })
 })

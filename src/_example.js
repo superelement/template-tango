@@ -6,14 +6,14 @@ tt.startQuestions({
 	cloneDest: 'C:/Users/jimd/Desktop/clones/'
 	, beyondComparePath: 'C:/Program Files/Beyond Compare 4/BCompare.exe'
 	, backEnd: {
-		rootDir: "C:/Users/jimd/Documents/repos/jimdoyle-2016/dev/deps/nodejs-helpers/template-tango/test-resources/back-end-files/"
+		rootDir: "C:/Users/jimd/Documents/repos/template-tango/test-resources/back-end-files/"
 		, extension: ".cshtml"
 		, pagesDir: "Views/"
 		, modulesDir: "Components/"
 		, pageExclusions: ["Views/About/*.cshtml"] // glob pattern of files to exclude 
 	}
 	, frontEnd: {
-		rootDir: "C:/Users/jimd/Documents/repos/jimdoyle-2016/dev/deps/nodejs-helpers/template-tango/test-resources/front-end-files/"
+		rootDir: "C:/Users/jimd/Documents/repos/template-tango/test-resources/front-end-files/"
 		, extension: ".vash" 
 		, pagesDir: "Pages/"
 		, modulesDir: "Widgets/"

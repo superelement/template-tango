@@ -1,8 +1,10 @@
 import fs = require("fs-extra");
 import inquirer = require("inquirer");
 import _ = require("lodash");
+import os = require("os");
 import chalk = require("chalk");
 import globby = require("globby");
+import slash = require("slash");
 import {Promise} from "es6-promise";
 import {polyfill} from "es6-promise";
 
@@ -21,10 +23,6 @@ class Questions {
 
     constructor(opts:IMergeOptions, completeCB:Function) {
         this.opts = opts;
-
-        if(!utils.checkVal(opts.beyondComparePath, "Option 'beyondComparePath' was not set.")) return;
-        if(!utils.checkVal(opts.cloneDest,         "Option 'cloneDest' was not set.")) return;
-
         this.questions().then(completeCB);
     }
 
@@ -64,7 +62,8 @@ class Questions {
                             return false;
                         }
 
-                        console.log(utils.getBeyondCompareMessage('Back to front', "magenta", "bgMagenta", opts.beyondComparePath, opts.cloneDest + B2F, opts.frontEnd.rootDir));
+                        utils.launchBC(opts.beyondComparePath, opts.cloneDest + B2F, opts.frontEnd.rootDir);
+                        console.log(utils.getBeyondCompareMessage('Back to front', "magenta", "bgMagenta"));
                         return true;
                     });
             },
@@ -88,7 +87,8 @@ class Questions {
                             return false;
                         }
 
-                        console.log(utils.getBeyondCompareMessage('Front to back', "cyan", "bgCyan", opts.beyondComparePath, opts.cloneDest + F2B, opts.backEnd.rootDir));
+                        utils.launchBC(opts.beyondComparePath, opts.cloneDest + F2B, opts.backEnd.rootDir);
+                        console.log(utils.getBeyondCompareMessage('Front to back', "cyan", "bgCyan"));
                         return true;
                     });
             },
@@ -99,9 +99,16 @@ class Questions {
         }
         ])
     }
+
 }
 
 function startQuestions(opts:IMergeOptions, completeCB:Function):void {
+    
+    if(!opts.beyondComparePath) opts.beyondComparePath = 'C:/Program Files/Beyond Compare 4/BCompare.exe'; 
+
+    // If cloneDest not provided, uses default OS tmpDir
+    if(!opts.cloneDest) opts.cloneDest = utils.ensureTrainlingSlash(slash(os.tmpdir())) + "template-tango/";
+    
     fs.remove(opts.cloneDest, function(err) {
         if(err) {
             console.warn(NS, "startQuestions", "Couldn't clear the 'cloneDest' directory", opts.cloneDest);

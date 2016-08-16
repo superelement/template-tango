@@ -5,7 +5,9 @@ var globby = require("globby");
 var replaceExt = require('replace-ext');
 var Bombom = require("../deps/bombom/dist/BomBom.js");
 var es6_promise_1 = require("es6-promise");
+var child_process_1 = require('child_process');
 var NS = "TemplateTango";
+var bcLaunchedAtLeastOnce = false;
 var bombom = new Bombom.default(), suppressWarnings = false;
 // checks a value, logs a warning and returns if successful
 function checkVal(val, msg) {
@@ -196,19 +198,40 @@ function expectFiles(fileList, cb) {
             cb();
     });
 }
-function getBeyondCompareMessage(type, col, bgCol, bcPath, cloneDest, targetDir) {
+function launchBC(bcPath, cloneDest, targetDir, cb, delay) {
+    if (cb === void 0) { cb = null; }
+    if (delay === void 0) { delay = 1000; }
+    var cmd = '"' + bcPath + '" "' + cloneDest + '" "' + targetDir + '"';
+    // timeout is just so you have a chance to read the message above
+    setTimeout(function () {
+        child_process_1.exec(cmd, function (err, stdout, stderr) {
+            if (err) {
+                console.error(err);
+                if (cb)
+                    cb(false, err);
+                return;
+            }
+            if (cb)
+                cb(true);
+        });
+    }, delay);
+}
+function getBeyondCompareMessage(type, col, bgCol) {
     var colFn = chalk[col];
     var bgColFn = chalk[bgCol];
-    return bgColFn.white('\n"' + type + '" clone complete.') +
-        colFn('\n\n Now copy and run this from another command-line before continuing (including quotes) ') +
-        bgColFn.white('\n"' + bcPath + '" "' + cloneDest + '" "' + targetDir + '" ') +
-        colFn('\n\n In Beyond Compare, go to ') +
-        bgColFn.white('"Tools -> Import Settings"') +
-        colFn(' and choose the file ') +
-        bgColFn.white('"deps/BCSettings.bcpkg"') +
-        colFn(' and check all the options. ') +
-        colFn.bold('You only need to set this once.') +
-        colFn('\n\n When you\'re finished hit enter.');
+    var msg = bgColFn.white('\n"' + type + '" clone complete.') +
+        colFn('\n\n Launching beyond compare...');
+    if (!bcLaunchedAtLeastOnce) {
+        msg += colFn('\n\n In Beyond Compare, go to ') +
+            bgColFn.white('"Tools -> Import Settings"') +
+            colFn(' and choose the file ') +
+            bgColFn.white('"deps/BCSettings.bcpkg"') +
+            colFn(' and check all the options. ') +
+            colFn.bold('You only need to set this once.') +
+            colFn('\n\n When you\'re finished hit enter.');
+    }
+    bcLaunchedAtLeastOnce = true;
+    return msg;
 }
 function getFileName(filePath, inclExt) {
     if (inclExt === void 0) { inclExt = true; }
@@ -228,13 +251,14 @@ exports.default = {
     getCWD: getCWD,
     expectFiles: expectFiles,
     getBeyondCompareMessage: getBeyondCompareMessage,
+    ensureTrainlingSlash: ensureTrainlingSlash,
+    launchBC: launchBC,
     testable: {
         suppressWarnings: function (val) {
             suppressWarnings = val;
         },
         getOptsFullPaths: getOptsFullPaths,
         bangUpExclusions: bangUpExclusions,
-        copyToNewFolderStructure: copyToNewFolderStructure,
-        ensureTrainlingSlash: ensureTrainlingSlash
+        copyToNewFolderStructure: copyToNewFolderStructure
     }
 };

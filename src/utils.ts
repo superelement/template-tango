@@ -6,10 +6,12 @@ import replaceExt = require('replace-ext');
 import Bombom = require("../deps/bombom/dist/BomBom.js");
 import {Promise} from "es6-promise";
 import {polyfill} from "es6-promise";
+import {exec} from 'child_process';
 
 import {ISuccessList,IMergableFiles,IWalk} from "./interfaces";
 
 const NS = "TemplateTango";
+var bcLaunchedAtLeastOnce:boolean = false;
 
 var bombom = new Bombom.default()
   , suppressWarnings = false;
@@ -250,20 +252,48 @@ function expectFiles(fileList:Array<string>, cb:Function):void {
     });
 }
 
-function getBeyondCompareMessage(type:string, col:string, bgCol:string, bcPath:string, cloneDest:string, targetDir:string):string {
+
+function launchBC(bcPath:string, cloneDest:string, targetDir:string, cb:Function = null, delay:number = 1000):void {
+    
+    var cmd:string = '"' + bcPath + '" "' + cloneDest + '" "' + targetDir + '"';
+    
+    // timeout is just so you have a chance to read the message above
+    setTimeout(function () {
+        exec(cmd, function (err:string, stdout:string, stderr:string) {
+            if (err) {
+                console.error(err);
+                if(cb) cb(false, err);
+                return;
+            }
+            if(cb) cb(true);
+        });
+    }, delay);
+}
+
+function getBeyondCompareMessage(type:string, col:string, bgCol:string):string {
     var colFn:any = (<any>chalk)[col];
-    var bgColFn:any = (<any>chalk)[bgCol]; 
-    return bgColFn.white('\n"'+type+'" clone complete.') +
-        colFn('\n\n Now copy and run this from another command-line before continuing (including quotes) ') + 
-            bgColFn.white('\n"' + bcPath + '" "' + cloneDest + '" "' + targetDir + '" ') +
-        colFn('\n\n In Beyond Compare, go to ') + 
+    var bgColFn:any = (<any>chalk)[bgCol];
+
+
+    var msg:string = bgColFn.white('\n"'+type+'" clone complete.') +
+        colFn('\n\n Launching beyond compare...');
+
+    if(!bcLaunchedAtLeastOnce) {
+        msg += colFn('\n\n In Beyond Compare, go to ') + 
             bgColFn.white('"Tools -> Import Settings"')+ 
             colFn(' and choose the file ') + 
             bgColFn.white('"deps/BCSettings.bcpkg"') + 
             colFn(' and check all the options. ') +
             colFn.bold('You only need to set this once.') +
         colFn('\n\n When you\'re finished hit enter.');
+    }
+    
+    bcLaunchedAtLeastOnce = true;
+
+    return msg;
 }
+
+
 
 
 function getFileName(filePath:string, inclExt:boolean = true) {
@@ -286,6 +316,8 @@ export default {
     , getCWD: getCWD
     , expectFiles: expectFiles
     , getBeyondCompareMessage: getBeyondCompareMessage   
+    , ensureTrainlingSlash: ensureTrainlingSlash
+    , launchBC: launchBC
     // just for unit tests
     , testable: {
         suppressWarnings: function(val:boolean) {
@@ -294,6 +326,5 @@ export default {
         ,getOptsFullPaths: getOptsFullPaths
         ,bangUpExclusions: bangUpExclusions
         ,copyToNewFolderStructure: copyToNewFolderStructure
-        ,ensureTrainlingSlash: ensureTrainlingSlash
     }
 }

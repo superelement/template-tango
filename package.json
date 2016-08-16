@@ -1,6 +1,6 @@
 {
   "name": "template-tango",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Tool for merging HTML templates between front and back end, making use of Beyond Compare folder comparison.",
   "main": "dist/index.js",
   "scripts": {
@@ -32,6 +32,7 @@
     "globby": "^6.0.0",
     "gulp-prompt": "0.1.2",
     "inquirer": "^1.1.2",
+    "slash": "^1.0.0",
     "typescript-promises": "^0.1.3",
     "typings": "^1.3.2"
   },

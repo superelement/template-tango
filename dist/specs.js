@@ -6,9 +6,6 @@ var tt = require("./index.js").default, utils = require("./utils.js").default;
 tt.testable.suppressWarnings(true);
 var MAIN_DIR = utils.normalizePaths(__dirname).split("dist")[0], TEST_RES = MAIN_DIR + "test-resources/", TEMP_DIR = MAIN_DIR + "dist/temp/";
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-beforeEach(function () {
-    fs.removeSync(TEMP_DIR);
-});
 afterEach(function () {
     fs.removeSync(TEMP_DIR);
 });
@@ -40,7 +37,7 @@ describe("getCWD", function () {
     });
 });
 describe("ensureTrainlingSlash", function () {
-    var fun = utils.testable.ensureTrainlingSlash;
+    var fun = utils.ensureTrainlingSlash;
     it("should make sure a path ends in a single slash", function () {
         expect(fun('a')).toBe('a/');
         expect(fun('a/b/')).toBe('a/b/');

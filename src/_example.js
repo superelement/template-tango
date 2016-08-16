@@ -3,18 +3,18 @@
 var tt = require("../dist/index.js").default
 
 tt.startQuestions({
-	cloneDest: 'C:/Users/jimd/Desktop/clones/'
-	, beyondComparePath: 'C:/Program Files/Beyond Compare 4/BCompare.exe'
-	, backEnd: {
-		rootDir: "C:/Users/jimd/Documents/repos/template-tango/test-resources/back-end-files/"
+	// cloneDest: 'OPTIONAL_CUSTOM_PATH_TO_ADD_CLONES_TO', // Optionally override the clone destination directory. Otherwise it will default to the temp directory for your OS.
+	// beyondComparePath: 'OPTIONAL_CUSTOM_BEYOND_COMPARE_PATH', // Optionally override the Beyond Compare path Otherwise it will default to 'C:/Program Files/Beyond Compare 4/BCompare.exe'
+	backEnd: {
+		rootDir: process.cwd() + "/test-resources/back-end-files/"
 		, extension: ".cshtml"
 		, pagesDir: "Views/"
 		, modulesDir: "Components/"
 		, pageExclusions: ["Views/About/*.cshtml"] // glob pattern of files to exclude
 		, subDir: "" 
-	}
-	, frontEnd: {
-		rootDir: "C:/Users/jimd/Documents/repos/template-tango/test-resources/front-end-files/"
+	},
+	frontEnd: {
+		rootDir: process.cwd() + "/test-resources/front-end-files/"
 		, extension: ".vash" 
 		, pagesDir: "Pages/"
 		, modulesDir: "Widgets/"

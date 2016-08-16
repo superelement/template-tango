@@ -1,7 +1,9 @@
 "use strict";
 var fs = require("fs-extra");
 var inquirer = require("inquirer");
+var os = require("os");
 var chalk = require("chalk");
+var slash = require("slash");
 var utils_1 = require("./utils");
 var NS = "TemplateTango";
 var B2F = "backToFront/";
@@ -10,10 +12,6 @@ var suppressWarnings = false;
 var Questions = (function () {
     function Questions(opts, completeCB) {
         this.opts = opts;
-        if (!utils_1.default.checkVal(opts.beyondComparePath, "Option 'beyondComparePath' was not set."))
-            return;
-        if (!utils_1.default.checkVal(opts.cloneDest, "Option 'cloneDest' was not set."))
-            return;
         this.questions().then(completeCB);
     }
     Questions.prototype.questions = function () {
@@ -48,7 +46,8 @@ var Questions = (function () {
                             console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);
                             return false;
                         }
-                        console.log(utils_1.default.getBeyondCompareMessage('Back to front', "magenta", "bgMagenta", opts.beyondComparePath, opts.cloneDest + B2F, opts.frontEnd.rootDir));
+                        utils_1.default.launchBC(opts.beyondComparePath, opts.cloneDest + B2F, opts.frontEnd.rootDir);
+                        console.log(utils_1.default.getBeyondCompareMessage('Back to front', "magenta", "bgMagenta"));
                         return true;
                     });
                 },
@@ -69,7 +68,8 @@ var Questions = (function () {
                             console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);
                             return false;
                         }
-                        console.log(utils_1.default.getBeyondCompareMessage('Front to back', "cyan", "bgCyan", opts.beyondComparePath, opts.cloneDest + F2B, opts.backEnd.rootDir));
+                        utils_1.default.launchBC(opts.beyondComparePath, opts.cloneDest + F2B, opts.backEnd.rootDir);
+                        console.log(utils_1.default.getBeyondCompareMessage('Front to back', "cyan", "bgCyan"));
                         return true;
                     });
                 },
@@ -83,6 +83,11 @@ var Questions = (function () {
     return Questions;
 }());
 function startQuestions(opts, completeCB) {
+    if (!opts.beyondComparePath)
+        opts.beyondComparePath = 'C:/Program Files/Beyond Compare 4/BCompare.exe';
+    // If cloneDest not provided, uses default OS tmpDir
+    if (!opts.cloneDest)
+        opts.cloneDest = utils_1.default.ensureTrainlingSlash(slash(os.tmpdir())) + "template-tango/";
     fs.remove(opts.cloneDest, function (err) {
         if (err) {
             console.warn(NS, "startQuestions", "Couldn't clear the 'cloneDest' directory", opts.cloneDest);

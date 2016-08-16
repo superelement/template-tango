@@ -13,9 +13,7 @@ var MAIN_DIR = utils.normalizePaths(__dirname).split("dist")[0]
   , TEMP_DIR = MAIN_DIR + "dist/temp/"
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-beforeEach(() => {
-	fs.removeSync(TEMP_DIR);
-})
+
 
 afterEach(() => {
 	fs.removeSync(TEMP_DIR);
@@ -60,7 +58,7 @@ describe("getCWD", () => {
 })
 
 describe("ensureTrainlingSlash", () => {
-	var fun = utils.testable.ensureTrainlingSlash
+	var fun = utils.ensureTrainlingSlash
 
 	it("should make sure a path ends in a single slash", () => {
 		expect(fun('a')).toBe('a/')

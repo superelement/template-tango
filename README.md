@@ -1,5 +1,5 @@
 # template-tango
-Tool for merging HTML templates between front and back end, making use of Beyond Compare folder comparison.
+Tool for merging HTML templates between front and back end. Uses Inquirer to prompt you with a series of questions, then launches Beyond Compare folder comparison with customized settings to aid you when merging.
 
 ## Install
 ```

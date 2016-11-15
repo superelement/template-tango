@@ -86,7 +86,7 @@ describe("copyBackToFront", () => {
 	  , beFiles = TEST_RES + "back-end-files/"
 	  , feModulesDir = "Widgets/"
 	  , fePagesDir = "Pages/"
-	  , fsSubDir = "tmpl/"
+	  , feSubDir = "tmpl/"
 	  , beOpts:IMergableFiles = {
 		  rootDir: beFiles
 		, extension: ".cshtml"
@@ -99,15 +99,15 @@ describe("copyBackToFront", () => {
 
 	 it(COPY_FE, (done:Function) => {
 		
-		let p:Promise<string> = fun(TEMP_DIR, beOpts, ".vash", fsSubDir, fePagesDir, feModulesDir);
+		let p:Promise<string> = fun(TEMP_DIR, beOpts, ".vash", feSubDir, fePagesDir, feModulesDir);
 		let fileList:Array<string> = [];
 		p.then(() => {
 			utils.expectFiles([
-				  TEMP_DIR + feModulesDir + "SideNav/"+ fsSubDir +"SideNav.vash"
-				, TEMP_DIR + fePagesDir + "Home/"+ fsSubDir +"Index.vash"
-				, TEMP_DIR + fePagesDir + "About/"+ fsSubDir +"Index.vash"
-				, TEMP_DIR + fePagesDir + "Home/"+ fsSubDir +"Index.vash"
-				, TEMP_DIR + fePagesDir + "Shared/"+ fsSubDir +"Header.vash"
+				  TEMP_DIR + feModulesDir + "SideNav/"+ feSubDir +"SideNav.vash"
+				, TEMP_DIR + fePagesDir + "Home/"+ feSubDir +"Index.vash"
+				, TEMP_DIR + fePagesDir + "About/"+ feSubDir +"Index.vash"
+				, TEMP_DIR + fePagesDir + "Home/"+ feSubDir +"Index.vash"
+				, TEMP_DIR + fePagesDir + "Shared/"+ feSubDir +"Header.vash"
 			], done);	
 		});
 	})
@@ -117,10 +117,27 @@ describe("copyBackToFront", () => {
 		let _beOpts:IMergableFiles = _.clone(beOpts);
 		_beOpts.pageExclusions = ["Views/**/*.cshtml"]; // glob pattern of files to exclude
 
-		let p:Promise<string> = fun(TEMP_DIR, _beOpts, ".vash", fsSubDir, fePagesDir, feModulesDir);
+		let p:Promise<string> = fun(TEMP_DIR, _beOpts, ".vash", feSubDir, fePagesDir, feModulesDir);
 		let fileList:Array<string> = [];
 		p.then(() => {
-			utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/"+ fsSubDir +"SideNav.vash"], done);
+			utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/"+ feSubDir +"SideNav.vash"], done);
+		});
+	})
+
+	it(COPY_FE+", using 'nameMapGroup' for modules and pages.", (done:Function) => {
+		
+		let _beOpts:IMergableFiles = _.clone(beOpts);
+		let nameMapGroup = { // maps template name exceptions between front and back end
+			pages: [{ backEnd: "DashboardPage/Home", frontEnd: "Dashboard/tmpl/Index" }],
+			modules: [{ backEnd: "AppNav/Index", frontEnd: "TopNav/tmpl/TopNav" }]
+		}
+
+		let p:Promise<string> = fun(TEMP_DIR, _beOpts, ".vash", feSubDir, fePagesDir, feModulesDir, nameMapGroup);
+		let fileList:Array<string> = [];
+		p.then(() => {
+			utils.expectFiles([TEMP_DIR + fePagesDir + "Dashboard/"+ feSubDir +"Index.vash"], function() {
+				utils.expectFiles([TEMP_DIR + feModulesDir + "TopNav/"+ feSubDir +"TopNav.vash"], done);
+			});
 		});
 	})
 })
@@ -167,6 +184,23 @@ describe("copyFrontToBack", () => {
 		let fileList:Array<string> = [];
 		p.then(() => {
 			utils.expectFiles([TEMP_DIR + beModulesDir + "SideNav/SideNav.cshtml"], done);
+		});
+	})
+
+	it(COPY_BE+", using 'nameMapGroup' for modules and pages.", (done:Function) => {
+		
+		let _feOpts:IMergableFiles = _.clone(feOpts);
+		let nameMapGroup = { // maps template name exceptions between front and back end
+			pages: [{ backEnd: "DashboardPage/Home", frontEnd: "Dashboard/tmpl/Index" }],
+			modules: [{ backEnd: "AppNav/Index", frontEnd: "TopNav/tmpl/TopNav" }]
+		}
+
+		let p:Promise<string> = fun(TEMP_DIR, _feOpts, ".cshtml", "", bePagesDir, beModulesDir, nameMapGroup);
+		let fileList:Array<string> = [];
+		p.then(() => {
+			utils.expectFiles([TEMP_DIR + bePagesDir + "DashboardPage/Home.cshtml"], function() {
+				utils.expectFiles([TEMP_DIR + beModulesDir + "AppNav/Index.cshtml"], done);
+			});
 		});
 	})
 })
@@ -243,6 +277,7 @@ describe("bangUpExclusions", () => {
 		expect(fun(['!path'], 'root/')).toContain('!root/path')
 	})
 })
+
 
 
 /*

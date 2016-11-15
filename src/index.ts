@@ -30,6 +30,8 @@ class Questions {
         
         var opts:IMergeOptions = this.opts;
 
+
+
         return inquirer.prompt([
         {
             type: 'confirm',
@@ -55,7 +57,7 @@ class Questions {
                     return false;
                 }
 
-                return utils.copyBackToFront(opts.cloneDest + B2F, opts.backEnd, opts.frontEnd.extension, opts.frontEnd.subDir, opts.frontEnd.pagesDir, opts.frontEnd.modulesDir)
+                return utils.copyBackToFront(opts.cloneDest + B2F, opts.backEnd, opts.frontEnd.extension, opts.frontEnd.subDir, opts.frontEnd.pagesDir, opts.frontEnd.modulesDir, opts.nameMap)
                     .then((result:ISuccessList) => {
                         if(result.errList.length) {
                             console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);
@@ -80,7 +82,7 @@ class Questions {
                     return false;
                 }
 
-                return utils.copyFrontToBack(opts.cloneDest + F2B, opts.frontEnd, opts.backEnd.extension, opts.backEnd.subDir, opts.backEnd.pagesDir, opts.backEnd.modulesDir)
+                return utils.copyFrontToBack(opts.cloneDest + F2B, opts.frontEnd, opts.backEnd.extension, opts.backEnd.subDir, opts.backEnd.pagesDir, opts.backEnd.modulesDir, opts.nameMap)
                     .then((result:ISuccessList) => {
                         if(result.errList.length) {
                             console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);

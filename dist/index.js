@@ -40,7 +40,7 @@ var Questions = (function () {
                         console.warn(chalk.red("You answered 'No' to merging 'back to front'. Skipping step."));
                         return false;
                     }
-                    return utils_1.default.copyBackToFront(opts.cloneDest + B2F, opts.backEnd, opts.frontEnd.extension, opts.frontEnd.subDir, opts.frontEnd.pagesDir, opts.frontEnd.modulesDir)
+                    return utils_1.default.copyBackToFront(opts.cloneDest + B2F, opts.backEnd, opts.frontEnd.extension, opts.frontEnd.subDir, opts.frontEnd.pagesDir, opts.frontEnd.modulesDir, opts.nameMap)
                         .then(function (result) {
                         if (result.errList.length) {
                             console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);
@@ -62,7 +62,7 @@ var Questions = (function () {
                         console.warn(chalk.red("You answered 'No' to merging 'front to back'. Skipping step."));
                         return false;
                     }
-                    return utils_1.default.copyFrontToBack(opts.cloneDest + F2B, opts.frontEnd, opts.backEnd.extension, opts.backEnd.subDir, opts.backEnd.pagesDir, opts.backEnd.modulesDir)
+                    return utils_1.default.copyFrontToBack(opts.cloneDest + F2B, opts.frontEnd, opts.backEnd.extension, opts.backEnd.subDir, opts.backEnd.pagesDir, opts.backEnd.modulesDir, opts.nameMap)
                         .then(function (result) {
                         if (result.errList.length) {
                             console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);

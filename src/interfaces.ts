@@ -5,6 +5,7 @@ export interface IMergeOptions {
     completeCB: Function;
     backEnd: IMergableFiles;
     frontEnd: IMergableFiles;
+    nameMap?: INameMapGroup
 }
 
 export interface IMergableFiles {
@@ -25,4 +26,19 @@ export interface ISuccessList {
 
 export interface IWalk {
     path: string
+}
+
+export interface INameMap {
+    from:string
+    to:string
+}
+
+export interface INameMapSpecific {
+    backEnd:string
+    frontEnd:string
+}
+
+export interface INameMapGroup {
+    pages:Array<INameMapSpecific>
+    modules:Array<INameMapSpecific>
 }

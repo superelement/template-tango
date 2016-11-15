@@ -20,6 +20,10 @@ tt.startQuestions({
 		, modulesDir: "Widgets/"
 		, moduleExclusions: [] // glob pattern of files to exclude
 		, subDir: "tmpl/"
+	},
+	nameMap: { // (optional) because sometimes the names on back end have to be different to front end (or refactoring after a name change is a pain in the butt)
+		pages: [{ backEnd: "DashboardPage/Home", frontEnd: "Dashboard/tmpl/Index" }],
+		modules: [{ backEnd: "AppNav/Index", frontEnd: "TopNav/tmpl/TopNav" }]
 	}
 }, function() {
 	console.log("Now do other stuff for your production build");

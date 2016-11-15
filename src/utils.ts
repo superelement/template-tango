@@ -8,7 +8,7 @@ import {Promise} from "es6-promise";
 import {polyfill} from "es6-promise";
 import {exec} from 'child_process';
 
-import {ISuccessList,IMergableFiles,IWalk} from "./interfaces";
+import {ISuccessList,IMergableFiles,IWalk,INameMap,INameMapSpecific,INameMapGroup} from "./interfaces";
 
 const NS = "TemplateTango";
 var bcLaunchedAtLeastOnce:boolean = false;
@@ -102,7 +102,7 @@ function getOptsFullPaths(opts:IMergableFiles, type:string, log:boolean = false)
  * @param sucList (optional) - Array of successful file paths (uses originalFilePath).
  * @param errList (optional) - Array of failes file paths (uses originalFilePath).
  */
-function copyToNewFolderStructure(originalFilePath:string, originalMainDir:string, newMainDir:string, ext:string, originalSubDir:string, newSubDir:string, cb:Function, sucList:Array<string> = null, errList:Array<string> = null):void {
+function copyToNewFolderStructure(originalFilePath:string, originalMainDir:string, newMainDir:string, ext:string, originalSubDir:string, newSubDir:string, cb:Function, sucList:Array<string> = null, errList:Array<string> = null, nameMap:INameMap = null):void {
 
     // fail it if original file doesn't exist
     if(!fs.existsSync(originalFilePath)) {
@@ -117,19 +117,35 @@ function copyToNewFolderStructure(originalFilePath:string, originalMainDir:strin
     fs.readFile(originalFilePath, (err:Error, buf:Buffer) => {
         // we add a BOM to each file to avoid differences with Visual Studio created files
         buf = bombom.enforce(buf, "utf8");
+        
+        // console.log("---nameMap", nameMap)
+
+        var fileName:string = replaceExt( originalFilePath
+                        .replace(originalMainDir, "") // removes original main directory so it can be replaced with new one
+                    , ext);
+        
+        fileName = normalizePaths(fileName);
+        
+        // if(nameMap) console.log("--", nameMap.from + ext, fileName)
+        if(nameMap && nameMap.from + ext === fileName) {
+            fileName = nameMap.to + ext;
+            if(!suppressWarnings)
+                console.log(chalk.cyan(NS + " - copyToNewFolderStructure"), chalk.red("'nameMap' used"), nameMap);
+        }
 
         // The destination filePath removes the original directory (eg back end) and extension, because they've been replaced (eg. to match the front end ones), which makes them easily comparable
-        var dest = newMainDir + 
-                replaceExt( originalFilePath
-                    .replace(originalMainDir, "") // removes original main directory so it can be replaced with new one
-                , ext)
+        var dest = newMainDir + fileName;
 
         dest = normalizePaths(dest); // needs to be called before replacing subDir in path because of slash inconsistency on Windows
 
         if(originalSubDir) dest = dest.replace( "/" + originalSubDir, "/" ) // removes original subdirectory so it can be replaced with new one 
 
-        var fileName = getFileName(dest);
-        dest = dest.replace( fileName, newSubDir + fileName ); // adds new subdirectory
+        // adds new subdirectory, but if nameMap is used, this subdirectory will already exist, so gets skipped
+        fileName = getFileName(dest);
+        if(dest.indexOf(newSubDir + fileName) === -1)
+            dest = dest.replace( fileName, newSubDir + fileName );
+
+        // console.log("dest", dest)
         
 
         fs.outputFile(dest, buf, (err:Error) => {
@@ -151,7 +167,8 @@ function copyBackToFront(cloneDest:string,
                         feExt:string = ".vash",
                         feSubDir:string = "tmpl/",
                         fePagesDir:string = "Pages/", 
-                        feModulesDir:string = "Widgets/"): Promise<ISuccessList> {
+                        feModulesDir:string = "Widgets/",
+                        nameMapGroup:INameMapGroup = null): Promise<ISuccessList> {
     
     beOpts = prepareCopyOpts(beOpts);
     fePagesDir = ensureTrainlingSlash(fePagesDir);
@@ -184,11 +201,15 @@ function copyBackToFront(cloneDest:string,
         }
 
         backEndPages.forEach((filePath:string) => {
-            copyToNewFolderStructure(filePath, beOpts.rootDir + beOpts.pagesDir, cloneDest + fePagesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList);
+            let originalMainDir:string = beOpts.rootDir + beOpts.pagesDir;
+            let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, true);
+            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + fePagesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap);
         });
 
         backEndModules.forEach((filePath:string) => {
-            copyToNewFolderStructure(filePath, beOpts.rootDir + beOpts.modulesDir, cloneDest + feModulesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList);
+            let originalMainDir:string = beOpts.rootDir + beOpts.modulesDir;
+            let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, false);
+            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + feModulesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap);
         });
     });
 }
@@ -200,8 +221,8 @@ function copyFrontToBack(cloneDest:string,
                         beExt:string = ".vash",
                         beSubDir:string = "",
                         bePagesDir:string = "Views/", 
-                        beModulesDir:string = "Components/"): Promise<ISuccessList> {
-    
+                        beModulesDir:string = "Components/",
+                        nameMapGroup:INameMapGroup = null): Promise<ISuccessList> {
     
     feOpts = prepareCopyOpts(feOpts);
     bePagesDir = ensureTrainlingSlash(bePagesDir);
@@ -234,13 +255,40 @@ function copyFrontToBack(cloneDest:string,
         }
 
         fePages.forEach((filePath:string) => {
-            copyToNewFolderStructure(filePath, feOpts.rootDir + feOpts.pagesDir, cloneDest + bePagesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList);
+            let originalMainDir:string = feOpts.rootDir + feOpts.pagesDir;
+            let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, true);
+            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + bePagesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap);
         });
 
         feModules.forEach((filePath:string) => {
-            copyToNewFolderStructure(filePath, feOpts.rootDir + feOpts.modulesDir, cloneDest + beModulesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList);
+            let originalMainDir:string = feOpts.rootDir + feOpts.modulesDir;
+            let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, false);
+            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + beModulesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap);
         });
     });
+}
+
+
+
+function getNameMap(filePath:string, nameMapGroup:INameMapGroup, originalMainDir:string, isBackEnd:boolean, isPages:boolean):INameMap {
+
+    let nameMap:INameMap = null;
+    if(nameMapGroup) {
+        var fileName:string = normalizePaths( replaceExt( filePath.replace(originalMainDir, ""), "") );
+        var filterObj = isBackEnd ? { backEnd: fileName } : { frontEnd: fileName };
+        var matches = _.filter(isPages ? nameMapGroup.pages : nameMapGroup.modules, filterObj);
+
+        if(matches.length === 1) {
+            var nameMapSpecific:INameMapSpecific = matches[0];
+
+            nameMap = {
+                from: isBackEnd ? nameMapSpecific.backEnd : nameMapSpecific.frontEnd
+                ,to: isBackEnd ? nameMapSpecific.frontEnd : nameMapSpecific.backEnd
+            };
+        }
+    }
+
+    return nameMap;
 }
 
 

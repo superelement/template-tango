@@ -2,6 +2,7 @@
 var fs = require("fs-extra");
 var chalk = require("chalk");
 var globby = require("globby");
+var _ = require("lodash");
 var replaceExt = require('replace-ext');
 var Bombom = require("../deps/bombom/dist/BomBom.js");
 var es6_promise_1 = require("es6-promise");
@@ -79,9 +80,10 @@ function getOptsFullPaths(opts, type, log) {
  * @param sucList (optional) - Array of successful file paths (uses originalFilePath).
  * @param errList (optional) - Array of failes file paths (uses originalFilePath).
  */
-function copyToNewFolderStructure(originalFilePath, originalMainDir, newMainDir, ext, originalSubDir, newSubDir, cb, sucList, errList) {
+function copyToNewFolderStructure(originalFilePath, originalMainDir, newMainDir, ext, originalSubDir, newSubDir, cb, sucList, errList, nameMap) {
     if (sucList === void 0) { sucList = null; }
     if (errList === void 0) { errList = null; }
+    if (nameMap === void 0) { nameMap = null; }
     // fail it if original file doesn't exist
     if (!fs.existsSync(originalFilePath)) {
         if (errList)
@@ -96,16 +98,27 @@ function copyToNewFolderStructure(originalFilePath, originalMainDir, newMainDir,
     fs.readFile(originalFilePath, function (err, buf) {
         // we add a BOM to each file to avoid differences with Visual Studio created files
         buf = bombom.enforce(buf, "utf8");
+        // console.log("---nameMap", nameMap)
+        var fileName = replaceExt(originalFilePath
+            .replace(originalMainDir, "") // removes original main directory so it can be replaced with new one
+        , ext);
+        fileName = normalizePaths(fileName);
+        // if(nameMap) console.log("--", nameMap.from + ext, fileName)
+        if (nameMap && nameMap.from + ext === fileName) {
+            fileName = nameMap.to + ext;
+            if (!suppressWarnings)
+                console.log(chalk.cyan(NS + " - copyToNewFolderStructure"), chalk.red("'nameMap' used"), nameMap);
+        }
         // The destination filePath removes the original directory (eg back end) and extension, because they've been replaced (eg. to match the front end ones), which makes them easily comparable
-        var dest = newMainDir +
-            replaceExt(originalFilePath
-                .replace(originalMainDir, "") // removes original main directory so it can be replaced with new one
-            , ext);
+        var dest = newMainDir + fileName;
         dest = normalizePaths(dest); // needs to be called before replacing subDir in path because of slash inconsistency on Windows
         if (originalSubDir)
             dest = dest.replace("/" + originalSubDir, "/"); // removes original subdirectory so it can be replaced with new one 
-        var fileName = getFileName(dest);
-        dest = dest.replace(fileName, newSubDir + fileName); // adds new subdirectory
+        // adds new subdirectory, but if nameMap is used, this subdirectory will already exist, so gets skipped
+        fileName = getFileName(dest);
+        if (dest.indexOf(newSubDir + fileName) === -1)
+            dest = dest.replace(fileName, newSubDir + fileName);
+        // console.log("dest", dest)
         fs.outputFile(dest, buf, function (err) {
             if (err) {
                 if (errList)
@@ -122,11 +135,12 @@ function copyToNewFolderStructure(originalFilePath, originalMainDir, newMainDir,
 }
 function copyBackToFront(cloneDest, beOpts, 
     // will write using front end values
-    feExt, feSubDir, fePagesDir, feModulesDir) {
+    feExt, feSubDir, fePagesDir, feModulesDir, nameMapGroup) {
     if (feExt === void 0) { feExt = ".vash"; }
     if (feSubDir === void 0) { feSubDir = "tmpl/"; }
     if (fePagesDir === void 0) { fePagesDir = "Pages/"; }
     if (feModulesDir === void 0) { feModulesDir = "Widgets/"; }
+    if (nameMapGroup === void 0) { nameMapGroup = null; }
     beOpts = prepareCopyOpts(beOpts);
     fePagesDir = ensureTrainlingSlash(fePagesDir);
     feModulesDir = ensureTrainlingSlash(feModulesDir);
@@ -148,20 +162,25 @@ function copyBackToFront(cloneDest, beOpts,
             }
         };
         backEndPages.forEach(function (filePath) {
-            copyToNewFolderStructure(filePath, beOpts.rootDir + beOpts.pagesDir, cloneDest + fePagesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList);
+            var originalMainDir = beOpts.rootDir + beOpts.pagesDir;
+            var nameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, true);
+            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + fePagesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap);
         });
         backEndModules.forEach(function (filePath) {
-            copyToNewFolderStructure(filePath, beOpts.rootDir + beOpts.modulesDir, cloneDest + feModulesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList);
+            var originalMainDir = beOpts.rootDir + beOpts.modulesDir;
+            var nameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, false);
+            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + feModulesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap);
         });
     });
 }
 function copyFrontToBack(cloneDest, feOpts, 
     // will write using front end values
-    beExt, beSubDir, bePagesDir, beModulesDir) {
+    beExt, beSubDir, bePagesDir, beModulesDir, nameMapGroup) {
     if (beExt === void 0) { beExt = ".vash"; }
     if (beSubDir === void 0) { beSubDir = ""; }
     if (bePagesDir === void 0) { bePagesDir = "Views/"; }
     if (beModulesDir === void 0) { beModulesDir = "Components/"; }
+    if (nameMapGroup === void 0) { nameMapGroup = null; }
     feOpts = prepareCopyOpts(feOpts);
     bePagesDir = ensureTrainlingSlash(bePagesDir);
     beModulesDir = ensureTrainlingSlash(beModulesDir);
@@ -183,12 +202,32 @@ function copyFrontToBack(cloneDest, feOpts,
             }
         };
         fePages.forEach(function (filePath) {
-            copyToNewFolderStructure(filePath, feOpts.rootDir + feOpts.pagesDir, cloneDest + bePagesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList);
+            var originalMainDir = feOpts.rootDir + feOpts.pagesDir;
+            var nameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, true);
+            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + bePagesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap);
         });
         feModules.forEach(function (filePath) {
-            copyToNewFolderStructure(filePath, feOpts.rootDir + feOpts.modulesDir, cloneDest + beModulesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList);
+            var originalMainDir = feOpts.rootDir + feOpts.modulesDir;
+            var nameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, false);
+            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + beModulesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap);
         });
     });
+}
+function getNameMap(filePath, nameMapGroup, originalMainDir, isBackEnd, isPages) {
+    var nameMap = null;
+    if (nameMapGroup) {
+        var fileName = normalizePaths(replaceExt(filePath.replace(originalMainDir, ""), ""));
+        var filterObj = isBackEnd ? { backEnd: fileName } : { frontEnd: fileName };
+        var matches = _.filter(isPages ? nameMapGroup.pages : nameMapGroup.modules, filterObj);
+        if (matches.length === 1) {
+            var nameMapSpecific = matches[0];
+            nameMap = {
+                from: isBackEnd ? nameMapSpecific.backEnd : nameMapSpecific.frontEnd,
+                to: isBackEnd ? nameMapSpecific.frontEnd : nameMapSpecific.backEnd
+            };
+        }
+    }
+    return nameMap;
 }
 function expectFiles(fileList, cb) {
     fileList.forEach(function (filePath, i) {

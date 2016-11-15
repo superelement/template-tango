@@ -54,7 +54,7 @@ describe("expectFiles", function () {
 });
 describe("copyBackToFront", function () {
     var COPY_FE = "should copy all test resources into temp dist folder and change the directory names and extensions to be front end values";
-    var fun = utils.copyBackToFront, beFiles = TEST_RES + "back-end-files/", feModulesDir = "Widgets/", fePagesDir = "Pages/", fsSubDir = "tmpl/", beOpts = {
+    var fun = utils.copyBackToFront, beFiles = TEST_RES + "back-end-files/", feModulesDir = "Widgets/", fePagesDir = "Pages/", feSubDir = "tmpl/", beOpts = {
         rootDir: beFiles,
         extension: ".cshtml",
         pagesDir: "Views/",
@@ -64,25 +64,39 @@ describe("copyBackToFront", function () {
         subDir: ""
     };
     it(COPY_FE, function (done) {
-        var p = fun(TEMP_DIR, beOpts, ".vash", fsSubDir, fePagesDir, feModulesDir);
+        var p = fun(TEMP_DIR, beOpts, ".vash", feSubDir, fePagesDir, feModulesDir);
         var fileList = [];
         p.then(function () {
             utils.expectFiles([
-                TEMP_DIR + feModulesDir + "SideNav/" + fsSubDir + "SideNav.vash",
-                TEMP_DIR + fePagesDir + "Home/" + fsSubDir + "Index.vash",
-                TEMP_DIR + fePagesDir + "About/" + fsSubDir + "Index.vash",
-                TEMP_DIR + fePagesDir + "Home/" + fsSubDir + "Index.vash",
-                TEMP_DIR + fePagesDir + "Shared/" + fsSubDir + "Header.vash"
+                TEMP_DIR + feModulesDir + "SideNav/" + feSubDir + "SideNav.vash",
+                TEMP_DIR + fePagesDir + "Home/" + feSubDir + "Index.vash",
+                TEMP_DIR + fePagesDir + "About/" + feSubDir + "Index.vash",
+                TEMP_DIR + fePagesDir + "Home/" + feSubDir + "Index.vash",
+                TEMP_DIR + fePagesDir + "Shared/" + feSubDir + "Header.vash"
             ], done);
         });
     });
     it(COPY_FE + ", affecting modules only (excludes pages).", function (done) {
         var _beOpts = _.clone(beOpts);
         _beOpts.pageExclusions = ["Views/**/*.cshtml"]; // glob pattern of files to exclude
-        var p = fun(TEMP_DIR, _beOpts, ".vash", fsSubDir, fePagesDir, feModulesDir);
+        var p = fun(TEMP_DIR, _beOpts, ".vash", feSubDir, fePagesDir, feModulesDir);
         var fileList = [];
         p.then(function () {
-            utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/" + fsSubDir + "SideNav.vash"], done);
+            utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/" + feSubDir + "SideNav.vash"], done);
+        });
+    });
+    it(COPY_FE + ", using 'nameMapGroup' for modules and pages.", function (done) {
+        var _beOpts = _.clone(beOpts);
+        var nameMapGroup = {
+            pages: [{ backEnd: "DashboardPage/Home", frontEnd: "Dashboard/tmpl/Index" }],
+            modules: [{ backEnd: "AppNav/Index", frontEnd: "TopNav/tmpl/TopNav" }]
+        };
+        var p = fun(TEMP_DIR, _beOpts, ".vash", feSubDir, fePagesDir, feModulesDir, nameMapGroup);
+        var fileList = [];
+        p.then(function () {
+            utils.expectFiles([TEMP_DIR + fePagesDir + "Dashboard/" + feSubDir + "Index.vash"], function () {
+                utils.expectFiles([TEMP_DIR + feModulesDir + "TopNav/" + feSubDir + "TopNav.vash"], done);
+            });
         });
     });
 });
@@ -117,6 +131,20 @@ describe("copyFrontToBack", function () {
         var fileList = [];
         p.then(function () {
             utils.expectFiles([TEMP_DIR + beModulesDir + "SideNav/SideNav.cshtml"], done);
+        });
+    });
+    it(COPY_BE + ", using 'nameMapGroup' for modules and pages.", function (done) {
+        var _feOpts = _.clone(feOpts);
+        var nameMapGroup = {
+            pages: [{ backEnd: "DashboardPage/Home", frontEnd: "Dashboard/tmpl/Index" }],
+            modules: [{ backEnd: "AppNav/Index", frontEnd: "TopNav/tmpl/TopNav" }]
+        };
+        var p = fun(TEMP_DIR, _feOpts, ".cshtml", "", bePagesDir, beModulesDir, nameMapGroup);
+        var fileList = [];
+        p.then(function () {
+            utils.expectFiles([TEMP_DIR + bePagesDir + "DashboardPage/Home.cshtml"], function () {
+                utils.expectFiles([TEMP_DIR + beModulesDir + "AppNav/Index.cshtml"], done);
+            });
         });
     });
 });

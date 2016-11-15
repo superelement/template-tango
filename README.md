@@ -25,6 +25,7 @@ tt.startQuestions({
     // Optionally override the Beyond Compare path Otherwise it will default to 'C:/Program Files/Beyond Compare 4/BCompare.exe'
 	// beyondComparePath: 'C:/Program Files/Beyond Compare 4/BCompare.exe',
 	
+	// back end config
     backEnd: {
 		rootDir: "LOCAL_PATH_TO_YOUR_BACK_END_PROJECT"
 		, extension: ".cshtml" // template file extension (.Net will usually be ".cshtml")
@@ -33,6 +34,8 @@ tt.startQuestions({
 		, pageExclusions: ["Views/About/*.cshtml"] // glob pattern of files to exclude
 		, subDir: "" // perhaps you have your templates inside a nested directory within your pages and UI modules? .Net will usually be empty string
 	},
+
+	// front end config
 	frontEnd: {
 		rootDir: "LOCAL_PATH_TO_YOUR_FRONT_END_PROJECT"
 		, extension: ".vash" // Your front end project might be using "Vash" razor templates (see npm "vash-static" and "gulp-vash-static")
@@ -40,6 +43,13 @@ tt.startQuestions({
 		, modulesDir: "Widgets/" // You might have a completely different folder structure on the front end for your UI module (aka component/widget) templates
 		, moduleExclusions: [] // glob pattern of files to exclude
 		, subDir: "tmpl/" // perhaps you have your templates inside a nested directory within your pages and UI modules? Add the directory here so they still compare side-by-side correctly
+	},
+
+	// (optional) maps page and module names that differ between front and back end
+	// because sometimes the names on back end have to be different to front end (or refactoring after a name change is a pain in the butt)
+	nameMap: {
+		pages: [{ backEnd: "DashboardPage/Home", frontEnd: "Dashboard/tmpl/Index" }],
+		modules: [{ backEnd: "AppNav/Index", frontEnd: "TopNav/tmpl/TopNav" }]
 	}
 }, function() {
 	console.log("Now do other stuff for your production build");

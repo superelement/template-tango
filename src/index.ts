@@ -52,9 +52,9 @@ class Questions {
         ,{
             when: (res:any):any => { // returns a promise
                 
-                if(!res.backToFront) {
+                if(!res.backToFront || !res.beyondCompare) {
                     console.warn(chalk.red("You answered 'No' to merging 'back to front'. Skipping step."))
-                    return false;
+                    return true;
                 }
 
                 return utils.copyBackToFront(opts.cloneDest + B2F, opts.backEnd, opts.frontEnd.extension, opts.frontEnd.subDir, opts.frontEnd.pagesDir, opts.frontEnd.modulesDir, opts.nameMap)
@@ -77,9 +77,9 @@ class Questions {
         ,{
             when: (res:any):any => { // returns a promise
                 
-                if(!res.frontToBack) {
+                if(!res.frontToBack || !res.beyondCompare) {
                     console.warn(chalk.red("You answered 'No' to merging 'front to back'. Skipping step."))
-                    return false;
+                    return true;
                 }
 
                 return utils.copyFrontToBack(opts.cloneDest + F2B, opts.frontEnd, opts.backEnd.extension, opts.backEnd.subDir, opts.backEnd.pagesDir, opts.backEnd.modulesDir, opts.nameMap)

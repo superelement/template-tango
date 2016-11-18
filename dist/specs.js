@@ -76,7 +76,8 @@ describe("copyBackToFront", function () {
             ], done);
         });
     });
-    it(COPY_FE + ", affecting modules only (excludes pages).", function (done) {
+    it(COPY_FE + ", affecting modules only (excludes pages, using 'pageExclusions').", function (done) {
+        // tt.testable.suppressWarnings(false);
         var _beOpts = _.clone(beOpts);
         _beOpts.pageExclusions = ["Views/**/*.cshtml"]; // glob pattern of files to exclude
         var p = fun(TEMP_DIR, _beOpts, ".vash", feSubDir, fePagesDir, feModulesDir);
@@ -85,6 +86,50 @@ describe("copyBackToFront", function () {
             utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/" + feSubDir + "SideNav.vash"], done);
         });
     });
+    it(COPY_FE + ", affecting modules only (by having a null 'pagesDir').", function (done) {
+        var _beOpts = _.clone(beOpts);
+        _beOpts.pagesDir = null;
+        var p = fun(TEMP_DIR, _beOpts, ".vash", feSubDir, null, feModulesDir);
+        var fileList = [];
+        p.then(function () {
+            utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/" + feSubDir + "SideNav.vash"], done);
+        });
+    });
+    // related to 'src/_example-2.js'
+    it(COPY_FE + ", affecting just modules and without a back end parent folder.", function (done) {
+        var _beOpts = {
+            rootDir: beFiles + "Models/",
+            extension: ".cs",
+            pagesDir: null,
+            modulesDir: "/",
+            pageExclusions: null,
+            moduleExclusions: null,
+            subDir: ""
+        };
+        var p = fun(TEMP_DIR, _beOpts, ".cs", "mdl/", null, feModulesDir);
+        var fileList = [];
+        p.then(function () {
+            utils.expectFiles([TEMP_DIR + feModulesDir + "SurfNav/mdl/SurfNav.cs"], done);
+        });
+    });
+    // related to 'src/_example-3.js'
+    it(COPY_FE + ", affecting just modules and without a front end parent folder.", function (done) {
+        var _beOpts = {
+            rootDir: beFiles,
+            extension: ".md",
+            pagesDir: null,
+            modulesDir: "Components/",
+            pageExclusions: null,
+            moduleExclusions: null,
+            subDir: "Docs/"
+        };
+        var p = fun(TEMP_DIR + "Docs/", _beOpts, ".md", "", null, "/");
+        var fileList = [];
+        p.then(function () {
+            utils.expectFiles([TEMP_DIR + "Docs/SideNav.md"], done);
+        });
+    });
+    // TODO: Test Pages without a parent folder
     it(COPY_FE + ", using 'nameMapGroup' for modules and pages.", function (done) {
         var _beOpts = _.clone(beOpts);
         var nameMapGroup = {
@@ -124,7 +169,7 @@ describe("copyFrontToBack", function () {
             ], done);
         });
     });
-    it(COPY_BE + ", affecting modules only (excludes pages).", function (done) {
+    it(COPY_BE + " ---- affecting modules only (excludes pages using 'pageExclusions').", function (done) {
         var _feOpts = _.clone(feOpts);
         _feOpts.pageExclusions = ["Pages/**/*.vash"]; // glob pattern of files to exclude
         var p = fun(TEMP_DIR, _feOpts, ".cshtml", "", bePagesDir, beModulesDir);
@@ -133,7 +178,51 @@ describe("copyFrontToBack", function () {
             utils.expectFiles([TEMP_DIR + beModulesDir + "SideNav/SideNav.cshtml"], done);
         });
     });
-    it(COPY_BE + ", using 'nameMapGroup' for modules and pages.", function (done) {
+    it(COPY_BE + " ---- affecting modules only (by having a null 'pagesDir').", function (done) {
+        var _feOpts = _.clone(feOpts);
+        _feOpts.pagesDir = null;
+        var p = fun(TEMP_DIR, _feOpts, ".cshtml", "", null, beModulesDir);
+        var fileList = [];
+        p.then(function () {
+            utils.expectFiles([TEMP_DIR + beModulesDir + "SideNav/SideNav.cshtml"], done);
+        });
+    });
+    // related to 'src/_example-3.js'
+    it(COPY_BE + ", affecting just modules and without a front end parent folder.", function (done) {
+        var _feOpts = {
+            rootDir: feFiles + "Docs/",
+            extension: ".md",
+            pagesDir: null,
+            modulesDir: "/",
+            pageExclusions: null,
+            moduleExclusions: null,
+            subDir: ""
+        };
+        var p = fun(TEMP_DIR, _feOpts, ".md", "Docs/", null, beModulesDir);
+        var fileList = [];
+        p.then(function () {
+            utils.expectFiles([TEMP_DIR + beModulesDir + "SideNav/Docs/SideNav.md"], done);
+        });
+    });
+    // related to 'src/_example-2.js'
+    it(COPY_BE + ", affecting just modules and without a backend parent folder.", function (done) {
+        var _feOpts = {
+            rootDir: feFiles,
+            extension: ".cs",
+            pagesDir: null,
+            modulesDir: "Widgets/",
+            pageExclusions: null,
+            moduleExclusions: null,
+            subDir: "mdl/"
+        };
+        var p = fun(TEMP_DIR + "Models/", _feOpts, ".cs", "", null, "/");
+        var fileList = [];
+        p.then(function () {
+            utils.expectFiles([TEMP_DIR + "Models/SurfNav.cs"], done);
+        });
+    });
+    // TODO: Test Pages without a parent folder
+    it(COPY_BE + " ---- using 'nameMapGroup' for modules and pages.", function (done) {
         var _feOpts = _.clone(feOpts);
         var nameMapGroup = {
             pages: [{ backEnd: "DashboardPage/Home", frontEnd: "Dashboard/tmpl/Index" }],
@@ -149,13 +238,20 @@ describe("copyFrontToBack", function () {
     });
 });
 describe("copyToNewFolderStructure", function () {
-    var fun = utils.testable.copyToNewFolderStructure, BASE_MSG = "should copy a file to new location and change the extension", feFiles = TEST_RES + "front-end-files/", feSubDir = "tmpl" // doesn't need trailing slash (it will get added it missed)
+    var fun = utils.testable.copyToNewFolderStructure, BASE_MSG = "should copy a file to new location and change the extension", feFiles = TEST_RES + "front-end-files/", beFiles = TEST_RES + "back-end-files/", feSubDir = "tmpl" // doesn't need trailing slash (it will get added it missed)
     , beSubDir = "", originalPageDir = feFiles + "Pages/", originalPagePath = originalPageDir + "About/tmpl/Index.vash", newPageDir = TEMP_DIR + "Views/";
     it("should copy a file to new location and change the extension", function (done) {
         fun(originalPagePath, originalPageDir, newPageDir, ".cshtml", feSubDir, beSubDir, function () {
             expect(fs.existsSync(newPageDir + "About/Index.cshtml")).toBe(true);
             done();
         });
+    });
+    it("should copy a file to new location as a single file without a parent folder", function (done) {
+        var feSubDir = "mdl", originalModulesDir = feFiles + "Widgets/", originalModulesPath = originalModulesDir + "SurfNav/mdl/SurfNav.cs", newModulesDir = TEMP_DIR + "Models/", justFile = true;
+        fun(originalModulesPath, originalModulesDir, newModulesDir, ".cs", feSubDir, "", function () {
+            expect(fs.existsSync(newModulesDir + "SurfNav.cs")).toBe(true);
+            done();
+        }, null, null, null, justFile);
     });
     it("should add original file path to the 'success array', after copying", function (done) {
         var successArray = [];

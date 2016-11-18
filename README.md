@@ -55,6 +55,10 @@ tt.startQuestions({
 	console.log("Now do other stuff for your production build");
 })
 ```
+### Complex Usage
+For more examples of complex usage see 'src/_example-1' and 'src/_example-2'. 
+Covers scenarios such as comparing a front end that has a mutli-tier folder structure, to a back end that has no folder structure and just matching file names (and visa-versa).  
+
 
 ## Ignore comments
 The settings inside `deps/BCSettings.bcpkg` contain custom grammar for '.cshtml' and '.vash' files, which tells Beyond Compare to ignore eveything between these comment blocks:
@@ -75,7 +79,7 @@ The most recent version on NPM Bombom was broken, so I've had to hack it a bit t
 Bombom is a library that adds a BOM (Byte Order Mark) to the beginning of files, so that files created in Visual Studio don't appear as different to regular files when being compared in Beyond Compare.
 
 ## Examples
-Edit "src/_example" with your own local paths, the run `npm run example` to see this app in action.
+Edit "src/_example-1" with your own local paths, the run `npm run example-1` to see this app in action.
 
 ## Tests
 Unit tests can be run just by running `gulp`, which will compile TypeScript and then run the tests.

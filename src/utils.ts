@@ -56,12 +56,13 @@ function bangUpExclusions(exclusions:Array<string>, rootDir:string): Array<strin
 
 
 function prepareCopyOpts(opts:IMergableFiles):IMergableFiles {
+
     // makes sure all paths use forward slashes
     opts.rootDir = normalizePaths(opts.rootDir);
 
     // makes sure paths all have trailing slashes
-    opts.pagesDir = ensureTrainlingSlash(opts.pagesDir);
-    opts.modulesDir = ensureTrainlingSlash(opts.modulesDir);
+    if(opts.pagesDir) opts.pagesDir = ensureTrainlingSlash(opts.pagesDir);
+    if(opts.modulesDir) opts.modulesDir = ensureTrainlingSlash(opts.modulesDir);
     
     return opts;
 }
@@ -100,9 +101,11 @@ function getOptsFullPaths(opts:IMergableFiles, type:string, log:boolean = false)
  * @param newSubDir - Sub-directory for target template.
  * @param cb - Callback on complete, passing boolean for success/fail.
  * @param sucList (optional) - Array of successful file paths (uses originalFilePath).
- * @param errList (optional) - Array of failes file paths (uses originalFilePath).
+ * @param errList (optional) - Array of failed file paths (uses originalFilePath).
+ * @param nameMap (optional) - Maps page and module names that differ between front and back end
+ * @param justFile (optional) - Pass true if you just want the file copied without any folder hierarchy
  */
-function copyToNewFolderStructure(originalFilePath:string, originalMainDir:string, newMainDir:string, ext:string, originalSubDir:string, newSubDir:string, cb:Function, sucList:Array<string> = null, errList:Array<string> = null, nameMap:INameMap = null):void {
+function copyToNewFolderStructure(originalFilePath:string, originalMainDir:string, newMainDir:string, ext:string, originalSubDir:string, newSubDir:string, cb:Function, sucList:Array<string> = null, errList:Array<string> = null, nameMap:INameMap = null, justFile:boolean = false):void {
 
     // fail it if original file doesn't exist
     if(!fs.existsSync(originalFilePath)) {
@@ -118,7 +121,6 @@ function copyToNewFolderStructure(originalFilePath:string, originalMainDir:strin
         // we add a BOM to each file to avoid differences with Visual Studio created files
         buf = bombom.enforce(buf, "utf8");
         
-        // console.log("---nameMap", nameMap)
 
         var fileName:string = replaceExt( originalFilePath
                         .replace(originalMainDir, "") // removes original main directory so it can be replaced with new one
@@ -144,8 +146,12 @@ function copyToNewFolderStructure(originalFilePath:string, originalMainDir:strin
         fileName = getFileName(dest);
         if(dest.indexOf(newSubDir + fileName) === -1)
             dest = dest.replace( fileName, newSubDir + fileName );
+        
 
-        // console.log("dest", dest)
+        if(justFile) {
+            dest = newMainDir + fileName;
+            console.log("dest", dest)
+        }
         
 
         fs.outputFile(dest, buf, (err:Error) => {
@@ -170,21 +176,30 @@ function copyBackToFront(cloneDest:string,
                         feModulesDir:string = "Widgets/",
                         nameMapGroup:INameMapGroup = null): Promise<ISuccessList> {
     
+    var noPages:boolean = !fePagesDir || !beOpts.pagesDir;
+    var noModules:boolean = !feModulesDir || !beOpts.modulesDir;
+
     beOpts = prepareCopyOpts(beOpts);
-    fePagesDir = ensureTrainlingSlash(fePagesDir);
-    feModulesDir = ensureTrainlingSlash(feModulesDir);
-    
-    // makes sure destination directories exist
-    fs.ensureDirSync(cloneDest + fePagesDir);
-    fs.ensureDirSync(cloneDest + feModulesDir);
-    
-    var backEndPages:Array<string> = getOptsFullPaths(beOpts, "page");
-    var backEndModules:Array<string> = getOptsFullPaths(beOpts, "module");
+
+    var bePages:Array<string>;
+    if(!noPages) {
+        fs.ensureDirSync(cloneDest + fePagesDir);
+        bePages = getOptsFullPaths(beOpts, "page");
+        fePagesDir = ensureTrainlingSlash(fePagesDir);
+    }
+
+
+    var beModules:Array<string>;
+    if(!noModules) {
+        feModulesDir = ensureTrainlingSlash(feModulesDir);
+        fs.ensureDirSync(cloneDest + feModulesDir);
+        beModules = getOptsFullPaths(beOpts, "module");
+    }
 
     
     return new Promise((resolve, reject) => {
         var count = 0
-          , total:number = backEndPages.length + backEndModules.length
+          , total:number = (noPages ? 0 : bePages.length) + (noModules ? 0 : beModules.length)
           , errList:Array<string> = []
           , sucList:Array<string> = []
 
@@ -200,17 +215,59 @@ function copyBackToFront(cloneDest:string,
             }
         }
 
-        backEndPages.forEach((filePath:string) => {
-            let originalMainDir:string = beOpts.rootDir + beOpts.pagesDir;
-            let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, true);
-            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + fePagesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap);
-        });
+        if(!noPages) {
+        
+            if(!bePages.length) {
+                if(!suppressWarnings)
+                    console.warn(NS, "copyBackToFront", "No back end 'pages' found. Check that 'extension', 'pagesDir' and 'rootDir' resolve to files that exist.");
+                
+                checkCount();
+            } else {
 
-        backEndModules.forEach((filePath:string) => {
-            let originalMainDir:string = beOpts.rootDir + beOpts.modulesDir;
-            let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, false);
-            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + feModulesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap);
-        });
+                bePages.forEach((filePath:string) => {
+                    let originalMainDir:string = beOpts.rootDir + beOpts.pagesDir;
+                    let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, true);
+                    let justFile:boolean = fePagesDir === "/";
+                    
+                    // normalizes trailing double slash from `fePagesDir` when there is no parent folder 
+                    let noParentFolder:boolean = beOpts.pagesDir === "/";
+                    if(noParentFolder) {
+                        originalMainDir = originalMainDir.replace("//", "/")
+                        fePagesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                    }
+
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + fePagesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap, justFile);
+                });
+            }
+
+        }
+
+        if(!noModules) {
+        
+            if(!beModules.length) {
+                if(!suppressWarnings)
+                    console.warn(NS, "copyBackToFront", "No back end 'modules' found. Check that 'extension', 'modulesDir' and 'rootDir' resolve to files that exist.");
+                
+                checkCount();
+            } else {
+
+                beModules.forEach((filePath:string) => {
+                    let originalMainDir:string = beOpts.rootDir + beOpts.modulesDir;
+                    let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, false);
+                    let justFile:boolean = feModulesDir === "/";
+                    
+                    // normalizes trailing double slash from `feModulesDir` when there is no parent folder 
+                    let noParentFolder:boolean = beOpts.modulesDir === "/";
+                    if(noParentFolder) {
+                        originalMainDir = originalMainDir.replace("//", "/")
+                        feModulesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                    }
+                    
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + feModulesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap, justFile);
+                });
+            }
+
+        }
     });
 }
 
@@ -224,21 +281,29 @@ function copyFrontToBack(cloneDest:string,
                         beModulesDir:string = "Components/",
                         nameMapGroup:INameMapGroup = null): Promise<ISuccessList> {
     
+    var noPages:boolean = !bePagesDir || !feOpts.pagesDir;
+    var noModules:boolean = !beModulesDir || !feOpts.modulesDir;
+    
     feOpts = prepareCopyOpts(feOpts);
-    bePagesDir = ensureTrainlingSlash(bePagesDir);
-    beModulesDir = ensureTrainlingSlash(beModulesDir);
     
-    // makes sure destination directories exist
-    fs.ensureDirSync(cloneDest + bePagesDir);
-    fs.ensureDirSync(cloneDest + beModulesDir);
-    
-    var fePages:Array<string> = getOptsFullPaths(feOpts, "page");
-    var feModules:Array<string> = getOptsFullPaths(feOpts, "module");
+    var fePages:Array<string>;
+    if(!noPages) {
+        bePagesDir = ensureTrainlingSlash(bePagesDir);
+        fs.ensureDirSync(cloneDest + bePagesDir);
+        fePages = getOptsFullPaths(feOpts, "page");
+    }
+
+    var feModules:Array<string>;
+    if(!noModules) {
+        beModulesDir = ensureTrainlingSlash(beModulesDir);
+        fs.ensureDirSync(cloneDest + beModulesDir);
+        feModules = getOptsFullPaths(feOpts, "module");
+    }
 
     
     return new Promise((resolve, reject) => {
         var count = 0
-          , total:number = fePages.length + feModules.length
+          , total:number = (noPages ? 0 : fePages.length) + (noModules ? 0 : feModules.length)
           , errList:Array<string> = []
           , sucList:Array<string> = []
 
@@ -254,17 +319,60 @@ function copyFrontToBack(cloneDest:string,
             }
         }
 
-        fePages.forEach((filePath:string) => {
-            let originalMainDir:string = feOpts.rootDir + feOpts.pagesDir;
-            let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, true);
-            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + bePagesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap);
-        });
+        if(!noPages) {
+        
+            if(!fePages.length) {
+                if(!suppressWarnings)
+                    console.warn(NS, "copyFrontToBack", "No front end 'pages' found. Check that 'extension', 'pagesDir' and 'rootDir' resolve to files that exist.");
+                
+                checkCount();
+            } else {
 
-        feModules.forEach((filePath:string) => {
-            let originalMainDir:string = feOpts.rootDir + feOpts.modulesDir;
-            let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, false);
-            copyToNewFolderStructure(filePath, originalMainDir, cloneDest + beModulesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap);
-        });
+                fePages.forEach((filePath:string) => {
+                    let originalMainDir:string = feOpts.rootDir + feOpts.pagesDir;
+                    let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, true);
+                    let justFile:boolean = bePagesDir === "/";
+
+                    // normalizes trailing double slash from `bePagesDir` when there is no parent folder 
+                    let noParentFolder:boolean = feOpts.pagesDir === "/";
+                    if(noParentFolder) {
+                        originalMainDir = originalMainDir.replace("//", "/")
+                        bePagesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                    }
+
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + bePagesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap, justFile);
+                });
+            }
+
+        }
+
+        if(!noModules) {
+        
+            if(!feModules.length) {
+                if(!suppressWarnings)
+                    console.warn(NS, "copyFrontToBack", "No front end 'modules' found. Check that 'extension', 'modulesDir' and 'rootDir' resolve to files that exist.");
+                
+                checkCount();
+            } else {
+
+                feModules.forEach((filePath:string) => {
+                    let originalMainDir:string = feOpts.rootDir + feOpts.modulesDir;
+                    let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, false);
+                    let justFile:boolean = beModulesDir === "/";
+                    
+                    
+                    // normalizes trailing double slash from `beModulesDir` when there is no parent folder 
+                    let noParentFolder:boolean = feOpts.modulesDir === "/";
+                    if(noParentFolder) {
+                        originalMainDir = originalMainDir.replace("//", "/")
+                        beModulesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                    }
+
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + beModulesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap, justFile);
+                });
+            }
+
+        }
     });
 }
 

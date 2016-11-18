@@ -1,4 +1,6 @@
-// This is intended to run and example of the main "startQuestions" function from node
+/**
+ * This is intended to run as an example of the main "startQuestions" function from node
+ */
 
 var tt = require("../dist/index.js").default
 

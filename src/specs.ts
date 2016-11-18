@@ -112,8 +112,10 @@ describe("copyBackToFront", () => {
 		});
 	})
 
-	it(COPY_FE+", affecting modules only (excludes pages).", (done:Function) => {
+	it(COPY_FE+", affecting modules only (excludes pages, using 'pageExclusions').", (done:Function) => {
 		
+		// tt.testable.suppressWarnings(false);
+
 		let _beOpts:IMergableFiles = _.clone(beOpts);
 		_beOpts.pageExclusions = ["Views/**/*.cshtml"]; // glob pattern of files to exclude
 
@@ -123,6 +125,60 @@ describe("copyBackToFront", () => {
 			utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/"+ feSubDir +"SideNav.vash"], done);
 		});
 	})
+
+	it(COPY_FE+", affecting modules only (by having a null 'pagesDir').", (done:Function) => {
+		
+		let _beOpts:IMergableFiles = _.clone(beOpts);
+		_beOpts.pagesDir = null;
+
+		let p:Promise<string> = fun(TEMP_DIR, _beOpts, ".vash", feSubDir, null, feModulesDir);
+		let fileList:Array<string> = [];
+		p.then(() => {
+			utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/"+ feSubDir +"SideNav.vash"], done);
+		});
+	})
+
+	// related to 'src/_example-2.js'
+	it(COPY_FE+", affecting just modules and without a back end parent folder.", (done:Function) => {
+		
+		let _beOpts:IMergableFiles = {
+			rootDir: beFiles + "Models/"
+			, extension: ".cs"
+			, pagesDir: null
+			, modulesDir: "/"
+			, pageExclusions: null
+			, moduleExclusions: null
+			, subDir: ""
+		}
+
+		let p:Promise<string> = fun(TEMP_DIR, _beOpts, ".cs", "mdl/", null, feModulesDir);
+		let fileList:Array<string> = [];
+		p.then(() => {
+			utils.expectFiles([TEMP_DIR + feModulesDir + "SurfNav/mdl/SurfNav.cs"], done);
+		});
+	})
+
+	// related to 'src/_example-3.js'
+	it(COPY_FE+", affecting just modules and without a front end parent folder.", (done:Function) => {
+		
+		let _beOpts:IMergableFiles = {
+			rootDir: beFiles
+			, extension: ".md"
+			, pagesDir: null
+			, modulesDir: "Components/"
+			, pageExclusions: null
+			, moduleExclusions: null
+			, subDir: "Docs/"
+		}
+
+		let p:Promise<string> = fun(TEMP_DIR + "Docs/", _beOpts, ".md", "", null, "/");
+		let fileList:Array<string> = [];
+		p.then(() => {
+			utils.expectFiles([TEMP_DIR + "Docs/SideNav.md"], done);
+		});
+	})
+
+	// TODO: Test Pages without a parent folder
 
 	it(COPY_FE+", using 'nameMapGroup' for modules and pages.", (done:Function) => {
 		
@@ -175,7 +231,7 @@ describe("copyFrontToBack", () => {
 	})
 
 
-	it(COPY_BE+", affecting modules only (excludes pages).", (done:Function) => {
+	it(COPY_BE+" ---- affecting modules only (excludes pages using 'pageExclusions').", (done:Function) => {
 		
 		let _feOpts:IMergableFiles = _.clone(feOpts);
 		_feOpts.pageExclusions = ["Pages/**/*.vash"]; // glob pattern of files to exclude
@@ -186,8 +242,62 @@ describe("copyFrontToBack", () => {
 			utils.expectFiles([TEMP_DIR + beModulesDir + "SideNav/SideNav.cshtml"], done);
 		});
 	})
+	
+	it(COPY_BE+" ---- affecting modules only (by having a null 'pagesDir').", (done:Function) => {
+		
+		let _feOpts:IMergableFiles = _.clone(feOpts);
+		_feOpts.pagesDir = null;
 
-	it(COPY_BE+", using 'nameMapGroup' for modules and pages.", (done:Function) => {
+		let p:Promise<string> = fun(TEMP_DIR, _feOpts, ".cshtml", "", null, beModulesDir);
+		let fileList:Array<string> = [];
+		p.then(() => {
+			utils.expectFiles([TEMP_DIR + beModulesDir + "SideNav/SideNav.cshtml"], done);
+		});
+	})
+
+	// related to 'src/_example-3.js'
+	it(COPY_BE+", affecting just modules and without a front end parent folder.", (done:Function) => {
+		
+		let _feOpts:IMergableFiles = {
+			rootDir: feFiles + "Docs/"
+			, extension: ".md"
+			, pagesDir: null
+			, modulesDir: "/"
+			, pageExclusions: null
+			, moduleExclusions: null
+			, subDir: ""
+		}
+
+		let p:Promise<string> = fun(TEMP_DIR, _feOpts, ".md", "Docs/", null, beModulesDir);
+		let fileList:Array<string> = [];
+		p.then(() => {
+			utils.expectFiles([TEMP_DIR + beModulesDir + "SideNav/Docs/SideNav.md"], done);
+		});
+	})
+
+	// related to 'src/_example-2.js'
+	it(COPY_BE+", affecting just modules and without a backend parent folder.", (done:Function) => {
+		
+		let _feOpts:IMergableFiles = {
+			rootDir: feFiles
+			, extension: ".cs"
+			, pagesDir: null
+			, modulesDir: "Widgets/"
+			, pageExclusions: null
+			, moduleExclusions: null
+			, subDir: "mdl/"
+		}
+
+		let p:Promise<string> = fun(TEMP_DIR + "Models/", _feOpts, ".cs", "", null, "/");
+		let fileList:Array<string> = [];
+		p.then(() => {
+			utils.expectFiles([TEMP_DIR + "Models/SurfNav.cs"], done);
+		});
+	})
+
+	// TODO: Test Pages without a parent folder
+
+	it(COPY_BE+" ---- using 'nameMapGroup' for modules and pages.", (done:Function) => {
 		
 		let _feOpts:IMergableFiles = _.clone(feOpts);
 		let nameMapGroup = { // maps template name exceptions between front and back end
@@ -209,6 +319,7 @@ describe("copyToNewFolderStructure", () => {
 	let fun = utils.testable.copyToNewFolderStructure
 	  , BASE_MSG = "should copy a file to new location and change the extension"
 	  , feFiles = TEST_RES + "front-end-files/"
+	  , beFiles = TEST_RES + "back-end-files/"
 	  , feSubDir = "tmpl" // doesn't need trailing slash (it will get added it missed)
 	  , beSubDir = ""
 	  , originalPageDir:string = feFiles + "Pages/"
@@ -222,6 +333,20 @@ describe("copyToNewFolderStructure", () => {
 		})
 	})
 
+	
+	it("should copy a file to new location as a single file without a parent folder", (done) => {
+		var feSubDir = "mdl" 
+		  , originalModulesDir:string = feFiles + "Widgets/"
+		  , originalModulesPath:string = originalModulesDir + "SurfNav/mdl/SurfNav.cs"
+		  , newModulesDir:string = TEMP_DIR + "Models/"
+		  , justFile = true
+		
+		fun(originalModulesPath, originalModulesDir, newModulesDir, ".cs", feSubDir, "", () => {
+			expect(fs.existsSync(newModulesDir + "SurfNav.cs")).toBe(true)
+			done();
+		}, null, null, null, justFile)
+	})
+	
 	it("should add original file path to the 'success array', after copying", (done) => {
 		let successArray:Array<string> = []
 
@@ -240,6 +365,7 @@ describe("copyToNewFolderStructure", () => {
 			done();
 		}, null, failArray)
 	})
+
 })
 
 

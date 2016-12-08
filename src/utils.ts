@@ -207,10 +207,12 @@ function copyBackToFront(cloneDest:string,
             count++;
     
             if(count >= total) {
-                resolve({
+                var result = {
                     sucList: sucList,
                     errList: errList
-                });
+                };
+                if(beOpts.completeCB) beOpts.completeCB(result);
+                resolve(result);
             }
         }
 
@@ -314,10 +316,12 @@ function copyFrontToBack(cloneDest:string,
             count++;
     
             if(count >= total) {
-                resolve({
+                var result = {
                     sucList: sucList,
                     errList: errList
-                });
+                };
+                if(feOpts.completeCB) feOpts.completeCB(result);
+                resolve(result);
             }
         }
 

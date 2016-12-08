@@ -63,6 +63,11 @@ describe("copyBackToFront", function () {
         moduleExclusions: null,
         subDir: ""
     };
+    it("should trigger a callback when 'back to front' copy is complete", function (done) {
+        var _beOpts = _.clone(beOpts);
+        _beOpts.completeCB = done;
+        fun(TEMP_DIR, _beOpts, ".vash", feSubDir, fePagesDir, feModulesDir);
+    });
     it(COPY_FE, function (done) {
         var p = fun(TEMP_DIR, beOpts, ".vash", feSubDir, fePagesDir, feModulesDir);
         var fileList = [];
@@ -158,6 +163,11 @@ describe("copyFrontToBack", function () {
         moduleExclusions: null,
         subDir: "tmpl/"
     };
+    it("should trigger a callback when 'front to back' copy is complete", function (done) {
+        var _feOpts = _.clone(feOpts);
+        _feOpts.completeCB = done;
+        fun(TEMP_DIR, _feOpts, ".cshtml", "", bePagesDir, beModulesDir);
+    });
     it(COPY_BE, function (done) {
         var p = fun(TEMP_DIR, feOpts, ".cshtml", "", bePagesDir, beModulesDir);
         var fileList = [];

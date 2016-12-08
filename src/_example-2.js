@@ -11,12 +11,18 @@ tt.startQuestions({
 		rootDir: process.cwd() + "/test-resources/back-end-files/Models/"
 		, extension: ".cs"
 		, modulesDir: "/"
+		, completeCB: function() {
+			console.log("back to front complete");
+		}
 	},
 	frontEnd: {
 		rootDir: process.cwd() + "/test-resources/front-end-files/"
 		, extension: ".cs"
 		, modulesDir: "Widgets/"
 		, subDir: "mdl/"
+		, completeCB: function() {
+			console.log("front to back complete");
+		}
 	}
 }, function() {
 	console.log("Now do other stuff for your production build");

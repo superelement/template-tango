@@ -16,6 +16,7 @@ export interface IMergableFiles {
     , pageExclusions: Array<string>
     , moduleExclusions: Array<string>
     , subDir: string
+    , completeCB?: Function
 }
 
 

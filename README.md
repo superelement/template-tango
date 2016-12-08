@@ -33,6 +33,9 @@ tt.startQuestions({
 		, modulesDir: "Components/" // directory where your UI module (aka component/widget) templates are kept
 		, pageExclusions: ["Views/About/*.cshtml"] // glob pattern of files to exclude
 		, subDir: "" // perhaps you have your templates inside a nested directory within your pages and UI modules? .Net will usually be empty string
+		, completeCB: function() { // option for callback when copy is complete, before Beyond Compare is launched (maybe for final manual refactoring)
+			console.log("back to front complete");
+		}
 	},
 
 	// front end config
@@ -43,6 +46,9 @@ tt.startQuestions({
 		, modulesDir: "Widgets/" // You might have a completely different folder structure on the front end for your UI module (aka component/widget) templates
 		, moduleExclusions: [] // glob pattern of files to exclude
 		, subDir: "tmpl/" // perhaps you have your templates inside a nested directory within your pages and UI modules? Add the directory here so they still compare side-by-side correctly
+		, completeCB: function() { // option for callback when copy is complete, before Beyond Compare is launched (maybe for final manual refactoring)
+			console.log("back to front complete");
+		}
 	},
 
 	// (optional) maps page and module names that differ between front and back end

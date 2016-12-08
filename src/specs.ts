@@ -97,6 +97,14 @@ describe("copyBackToFront", () => {
 		, subDir: ""
 	  };
 
+	 it("should trigger a callback when 'back to front' copy is complete", (done:Function) => {
+		
+		let _beOpts = _.clone(beOpts);
+		_beOpts.completeCB = done;
+
+		fun(TEMP_DIR, _beOpts, ".vash", feSubDir, fePagesDir, feModulesDir);
+	 })
+
 	 it(COPY_FE, (done:Function) => {
 		
 		let p:Promise<string> = fun(TEMP_DIR, beOpts, ".vash", feSubDir, fePagesDir, feModulesDir);
@@ -217,7 +225,15 @@ describe("copyFrontToBack", () => {
 		, subDir: "tmpl/"
 	  };
 
-	it(COPY_BE, (done:Function) => {
+	it("should trigger a callback when 'front to back' copy is complete", (done:Function) => {
+		
+		let _feOpts = _.clone(feOpts);
+		_feOpts.completeCB = done;
+
+		fun(TEMP_DIR, _feOpts, ".cshtml", "", bePagesDir, beModulesDir);
+	 })
+
+	 it(COPY_BE, (done:Function) => {
 		
 		let p:Promise<string> = fun(TEMP_DIR, feOpts, ".cshtml", "", bePagesDir, beModulesDir);
 		let fileList:Array<string> = [];

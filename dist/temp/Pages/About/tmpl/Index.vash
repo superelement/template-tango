@@ -1,0 +1,15 @@
+﻿@{
+	var Title = "Template Tango - About Us";
+}
+<!DOCTYPE html>
+<html>
+<head>
+	<title>@Title</title>
+</head>
+<body>
+	@Html.RenderPartial("../Shared/Header.cshtml")
+
+	<h1>@Title</h1>
+
+</body>
+</html>

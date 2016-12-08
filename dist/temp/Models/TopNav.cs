@@ -1,10 +1,10 @@
-namespace Template.Tango
+﻿namespace Template.Tango
 {
-    public class WgTopNav
+    public class WgSideNav
     {
         public string Uid { get; set; }
         public string WG { get; set; }
         public string Mods { get; set; }
-        public number Range { get; set; }
+        public string Title { get; set; }
     }
 }

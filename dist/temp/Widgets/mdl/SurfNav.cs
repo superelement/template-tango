@@ -1,4 +1,4 @@
-namespace Template.Tango
+﻿namespace Template.Tango
 {
     public class WgTopNav
     {

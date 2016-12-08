@@ -16,7 +16,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 
 afterEach(() => {
-	fs.removeSync(TEMP_DIR);
+	// fs.removeSync(TEMP_DIR);
 })
 
 describe("normalizePaths", () => {
@@ -154,7 +154,9 @@ describe("copyBackToFront", () => {
 		let p:Promise<string> = fun(TEMP_DIR, _beOpts, ".cs", "mdl/", null, feModulesDir);
 		let fileList:Array<string> = [];
 		p.then(() => {
+			utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/mdl/SideNav.cs"], done);
 			utils.expectFiles([TEMP_DIR + feModulesDir + "SurfNav/mdl/SurfNav.cs"], done);
+			utils.expectFiles([TEMP_DIR + feModulesDir + "TopNav/mdl/TopNav.cs"], done);
 		});
 	})
 

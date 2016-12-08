@@ -7,7 +7,7 @@ tt.testable.suppressWarnings(true);
 var MAIN_DIR = utils.normalizePaths(__dirname).split("dist")[0], TEST_RES = MAIN_DIR + "test-resources/", TEMP_DIR = MAIN_DIR + "dist/temp/";
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 afterEach(function () {
-    fs.removeSync(TEMP_DIR);
+    // fs.removeSync(TEMP_DIR);
 });
 describe("normalizePaths", function () {
     var fun = utils.normalizePaths;
@@ -109,7 +109,9 @@ describe("copyBackToFront", function () {
         var p = fun(TEMP_DIR, _beOpts, ".cs", "mdl/", null, feModulesDir);
         var fileList = [];
         p.then(function () {
+            utils.expectFiles([TEMP_DIR + feModulesDir + "SideNav/mdl/SideNav.cs"], done);
             utils.expectFiles([TEMP_DIR + feModulesDir + "SurfNav/mdl/SurfNav.cs"], done);
+            utils.expectFiles([TEMP_DIR + feModulesDir + "TopNav/mdl/TopNav.cs"], done);
         });
     });
     // related to 'src/_example-3.js'

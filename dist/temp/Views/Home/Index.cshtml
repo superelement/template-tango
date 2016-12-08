@@ -1,0 +1,22 @@
+﻿@{
+	var Title = "Template Tango - Home Page";
+}
+
+@*BC_IGNORE_START*@
+var ignoreMe = "Example of code ignored by Beyond Compare comparison";
+@*BC_IGNORE_END*@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>@Title</title>
+</head>
+<body>
+	@Html.RenderPartial("../Shared/Header.cshtml")
+
+	<h1>@Title</h1>
+
+	<p>Welcome to Template Tango</p>
+
+</body>
+</html>

@@ -195,7 +195,6 @@ function copyBackToFront(cloneDest:string,
         fs.ensureDirSync(cloneDest + feModulesDir);
         beModules = getOptsFullPaths(beOpts, "module");
     }
-
     
     return new Promise((resolve, reject) => {
         var count = 0
@@ -225,18 +224,19 @@ function copyBackToFront(cloneDest:string,
             } else {
 
                 bePages.forEach((filePath:string) => {
+                    let pagesDir:string = fePagesDir;
                     let originalMainDir:string = beOpts.rootDir + beOpts.pagesDir;
                     let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, true);
-                    let justFile:boolean = fePagesDir === "/";
+                    let justFile:boolean = pagesDir === "/";
                     
                     // normalizes trailing double slash from `fePagesDir` when there is no parent folder 
                     let noParentFolder:boolean = beOpts.pagesDir === "/";
                     if(noParentFolder) {
                         originalMainDir = originalMainDir.replace("//", "/")
-                        fePagesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                        pagesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
                     }
 
-                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + fePagesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap, justFile);
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + pagesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap, justFile);
                 });
             }
 
@@ -252,18 +252,20 @@ function copyBackToFront(cloneDest:string,
             } else {
 
                 beModules.forEach((filePath:string) => {
+                    let modulesDir:string = feModulesDir;
                     let originalMainDir:string = beOpts.rootDir + beOpts.modulesDir;
                     let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, false);
-                    let justFile:boolean = feModulesDir === "/";
+                    let justFile:boolean = modulesDir === "/";
+                    
                     
                     // normalizes trailing double slash from `feModulesDir` when there is no parent folder 
                     let noParentFolder:boolean = beOpts.modulesDir === "/";
                     if(noParentFolder) {
                         originalMainDir = originalMainDir.replace("//", "/")
-                        feModulesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                        modulesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
                     }
                     
-                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + feModulesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap, justFile);
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + modulesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap, justFile);
                 });
             }
 
@@ -329,18 +331,19 @@ function copyFrontToBack(cloneDest:string,
             } else {
 
                 fePages.forEach((filePath:string) => {
+                    let pagesDir:string = bePagesDir;
                     let originalMainDir:string = feOpts.rootDir + feOpts.pagesDir;
                     let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, true);
-                    let justFile:boolean = bePagesDir === "/";
+                    let justFile:boolean = pagesDir === "/";
 
                     // normalizes trailing double slash from `bePagesDir` when there is no parent folder 
                     let noParentFolder:boolean = feOpts.pagesDir === "/";
                     if(noParentFolder) {
                         originalMainDir = originalMainDir.replace("//", "/")
-                        bePagesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                        pagesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
                     }
 
-                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + bePagesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap, justFile);
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + pagesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap, justFile);
                 });
             }
 
@@ -356,19 +359,20 @@ function copyFrontToBack(cloneDest:string,
             } else {
 
                 feModules.forEach((filePath:string) => {
+                    let modulesDir:string = beModulesDir;
                     let originalMainDir:string = feOpts.rootDir + feOpts.modulesDir;
                     let nameMap:INameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, false);
-                    let justFile:boolean = beModulesDir === "/";
+                    let justFile:boolean = modulesDir === "/";
                     
                     
                     // normalizes trailing double slash from `beModulesDir` when there is no parent folder 
                     let noParentFolder:boolean = feOpts.modulesDir === "/";
                     if(noParentFolder) {
                         originalMainDir = originalMainDir.replace("//", "/")
-                        beModulesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                        modulesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
                     }
 
-                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + beModulesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap, justFile);
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + modulesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap, justFile);
                 });
             }
 

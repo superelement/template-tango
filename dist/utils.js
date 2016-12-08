@@ -183,16 +183,17 @@ function copyBackToFront(cloneDest, beOpts,
             }
             else {
                 bePages.forEach(function (filePath) {
+                    var pagesDir = fePagesDir;
                     var originalMainDir = beOpts.rootDir + beOpts.pagesDir;
                     var nameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, true);
-                    var justFile = fePagesDir === "/";
+                    var justFile = pagesDir === "/";
                     // normalizes trailing double slash from `fePagesDir` when there is no parent folder 
                     var noParentFolder = beOpts.pagesDir === "/";
                     if (noParentFolder) {
                         originalMainDir = originalMainDir.replace("//", "/");
-                        fePagesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                        pagesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
                     }
-                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + fePagesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap, justFile);
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + pagesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap, justFile);
                 });
             }
         }
@@ -204,16 +205,17 @@ function copyBackToFront(cloneDest, beOpts,
             }
             else {
                 beModules.forEach(function (filePath) {
+                    var modulesDir = feModulesDir;
                     var originalMainDir = beOpts.rootDir + beOpts.modulesDir;
                     var nameMap = getNameMap(filePath, nameMapGroup, originalMainDir, true, false);
-                    var justFile = feModulesDir === "/";
+                    var justFile = modulesDir === "/";
                     // normalizes trailing double slash from `feModulesDir` when there is no parent folder 
                     var noParentFolder = beOpts.modulesDir === "/";
                     if (noParentFolder) {
                         originalMainDir = originalMainDir.replace("//", "/");
-                        feModulesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                        modulesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
                     }
-                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + feModulesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap, justFile);
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + modulesDir, feExt, beOpts.subDir, feSubDir, checkCount, sucList, errList, nameMap, justFile);
                 });
             }
         }
@@ -262,16 +264,17 @@ function copyFrontToBack(cloneDest, feOpts,
             }
             else {
                 fePages.forEach(function (filePath) {
+                    var pagesDir = bePagesDir;
                     var originalMainDir = feOpts.rootDir + feOpts.pagesDir;
                     var nameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, true);
-                    var justFile = bePagesDir === "/";
+                    var justFile = pagesDir === "/";
                     // normalizes trailing double slash from `bePagesDir` when there is no parent folder 
                     var noParentFolder = feOpts.pagesDir === "/";
                     if (noParentFolder) {
                         originalMainDir = originalMainDir.replace("//", "/");
-                        bePagesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                        pagesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
                     }
-                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + bePagesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap, justFile);
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + pagesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap, justFile);
                 });
             }
         }
@@ -283,16 +286,17 @@ function copyFrontToBack(cloneDest, feOpts,
             }
             else {
                 feModules.forEach(function (filePath) {
+                    var modulesDir = beModulesDir;
                     var originalMainDir = feOpts.rootDir + feOpts.modulesDir;
                     var nameMap = getNameMap(filePath, nameMapGroup, originalMainDir, false, false);
-                    var justFile = beModulesDir === "/";
+                    var justFile = modulesDir === "/";
                     // normalizes trailing double slash from `beModulesDir` when there is no parent folder 
                     var noParentFolder = feOpts.modulesDir === "/";
                     if (noParentFolder) {
                         originalMainDir = originalMainDir.replace("//", "/");
-                        beModulesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
+                        modulesDir += getFileName(filePath, false) + "/"; // generates the folder from the file name
                     }
-                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + beModulesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap, justFile);
+                    copyToNewFolderStructure(filePath, originalMainDir, cloneDest + modulesDir, beExt, feOpts.subDir, beSubDir, checkCount, sucList, errList, nameMap, justFile);
                 });
             }
         }

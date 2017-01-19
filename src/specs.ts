@@ -16,7 +16,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 
 afterEach(() => {
-	// fs.removeSync(TEMP_DIR);
+	fs.removeSync(TEMP_DIR);
 })
 
 describe("normalizePaths", () => {

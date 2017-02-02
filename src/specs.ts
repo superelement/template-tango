@@ -15,10 +15,6 @@ var MAIN_DIR = utils.normalizePaths(__dirname).split("dist")[0]
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 
-afterEach(() => {
-	fs.removeSync(TEMP_DIR);
-})
-
 describe("normalizePaths", () => {
 	var fun = utils.normalizePaths
 
@@ -420,6 +416,12 @@ describe("bangUpExclusions", () => {
 	it("should only contain a single '!' character even though path already starts with one", () => {
 		expect(fun(['!path'], 'root/')).toContain('!root/path')
 	})
+
+	// just cleans up after last test
+	afterEach(() => {
+		fs.removeSync(TEMP_DIR);
+	})
+
 })
 
 

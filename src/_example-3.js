@@ -17,7 +17,8 @@ tt.startQuestions({
 		rootDir: process.cwd() + "/test-resources/front-end-files/Docs"
 		, extension: ".md"
 		, modulesDir: "/"
-	}
+	},
+	skipBCConfirm: true
 }, function() {
 	console.log("Now do other stuff for your production build");
 })

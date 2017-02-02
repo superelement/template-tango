@@ -6,9 +6,6 @@ var tt = require("./index.js").default, utils = require("./utils.js").default;
 tt.testable.suppressWarnings(true);
 var MAIN_DIR = utils.normalizePaths(__dirname).split("dist")[0], TEST_RES = MAIN_DIR + "test-resources/", TEMP_DIR = MAIN_DIR + "dist/temp/";
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-afterEach(function () {
-    // fs.removeSync(TEMP_DIR);
-});
 describe("normalizePaths", function () {
     var fun = utils.normalizePaths;
     it("should convert Windows paths to Unix paths", function () {
@@ -304,6 +301,10 @@ describe("bangUpExclusions", function () {
     });
     it("should only contain a single '!' character even though path already starts with one", function () {
         expect(fun(['!path'], 'root/')).toContain('!root/path');
+    });
+    // just cleans up after last test
+    afterEach(function () {
+        fs.removeSync(TEMP_DIR);
     });
 });
 /*

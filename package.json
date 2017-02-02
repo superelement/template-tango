@@ -1,11 +1,13 @@
 {
   "name": "template-tango",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Tool for merging HTML templates between front and back end, making use of Beyond Compare folder comparison.",
   "main": "dist/index.js",
   "scripts": {
     "typings": "typings install --save --global",
-    "example": "node src/_example.js",
+    "example-1": "node src/_example-1.js",
+    "example-2": "node src/_example-2.js",
+    "example-3": "node src/_example-3.js",
     "test": "gulp"
   },
   "repository": {

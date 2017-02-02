@@ -30,17 +30,23 @@ class Questions {
         
         var opts:IMergeOptions = this.opts;
 
+        var questions:any[] = [];
 
-
-        return inquirer.prompt([
-        {
-            type: 'confirm',
-            name: 'beyondCompare',
-            message: chalk.magenta('Have you got Beyond Compare installed on the command-line? You will need it to run this task. See README.md for setup guide'),
-            default: true
+        if(!opts.skipBCConfirm) {
+            questions.push({
+                type: 'confirm',
+                name: 'beyondCompare',
+                message: chalk.magenta('Have you got Beyond Compare installed on the command-line? You will need it to run this task. See README.md for setup guide'),
+                default: true
+            });
         }
-        ,{
+
+        questions.push({
             when: function (res:any):boolean {
+                if(opts.skipBCConfirm) {
+                    res.beyondCompare = true;
+                    return true;
+                }
                 if(!res.beyondCompare) console.warn(chalk.red("Sorry, but you must have Beyond Compare installed on the command-line to run this app. Stopping early."))
                 return res.beyondCompare;
             },
@@ -53,7 +59,8 @@ class Questions {
             when: (res:any):any => { // returns a promise
                 
                 if(!res.backToFront || !res.beyondCompare) {
-                    console.warn(chalk.red("You answered 'No' to merging 'back to front'. Skipping step."))
+                    if( !res.beyondCompare ) console.warn(chalk.red("You answered 'No' having Beyond Compare installed on the command-line. Skipping step."))
+                    else if( !res.backToFront) console.warn(chalk.red("You answered 'No' to merging 'back to front'. Skipping step."))
                     return true;
                 }
 
@@ -78,7 +85,8 @@ class Questions {
             when: (res:any):any => { // returns a promise
                 
                 if(!res.frontToBack || !res.beyondCompare) {
-                    console.warn(chalk.red("You answered 'No' to merging 'front to back'. Skipping step."))
+                    if( !res.beyondCompare ) console.warn(chalk.red("You answered 'No' having Beyond Compare installed on the command-line. Skipping step."))
+                    else if( !res.frontToBack) console.warn(chalk.red("You answered 'No' to merging 'front to back'. Skipping step."))
                     return true;
                 }
 
@@ -98,8 +106,9 @@ class Questions {
             name: 'frontToBack',
             message: chalk.magenta("When you're done with forwards merge, press enter to run final step."),
             default: true
-        }
-        ])
+        });
+
+        return inquirer.prompt(questions)
     }
 
 }

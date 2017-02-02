@@ -16,69 +16,79 @@ var Questions = (function () {
     }
     Questions.prototype.questions = function () {
         var opts = this.opts;
-        return inquirer.prompt([
-            {
+        var questions = [];
+        if (!opts.skipBCConfirm) {
+            questions.push({
                 type: 'confirm',
                 name: 'beyondCompare',
                 message: chalk.magenta('Have you got Beyond Compare installed on the command-line? You will need it to run this task. See README.md for setup guide'),
                 default: true
+            });
+        }
+        questions.push({
+            when: function (res) {
+                if (opts.skipBCConfirm) {
+                    res.beyondCompare = true;
+                    return true;
+                }
+                if (!res.beyondCompare)
+                    console.warn(chalk.red("Sorry, but you must have Beyond Compare installed on the command-line to run this app. Stopping early."));
+                return res.beyondCompare;
             },
-            {
-                when: function (res) {
+            type: 'confirm',
+            name: 'backToFront',
+            message: chalk.cyan('\nOk to clone "back to front" into ') + chalk.bgCyan.white('"' + this.opts.cloneDest + B2F + '"') + chalk.cyan("?"),
+            default: true
+        }, {
+            when: function (res) {
+                if (!res.backToFront || !res.beyondCompare) {
                     if (!res.beyondCompare)
-                        console.warn(chalk.red("Sorry, but you must have Beyond Compare installed on the command-line to run this app. Stopping early."));
-                    return res.beyondCompare;
-                },
-                type: 'confirm',
-                name: 'backToFront',
-                message: chalk.cyan('\nOk to clone "back to front" into ') + chalk.bgCyan.white('"' + this.opts.cloneDest + B2F + '"') + chalk.cyan("?"),
-                default: true
-            },
-            {
-                when: function (res) {
-                    if (!res.backToFront || !res.beyondCompare) {
+                        console.warn(chalk.red("You answered 'No' having Beyond Compare installed on the command-line. Skipping step."));
+                    else if (!res.backToFront)
                         console.warn(chalk.red("You answered 'No' to merging 'back to front'. Skipping step."));
-                        return true;
+                    return true;
+                }
+                return utils_1.default.copyBackToFront(opts.cloneDest + B2F, opts.backEnd, opts.frontEnd.extension, opts.frontEnd.subDir, opts.frontEnd.pagesDir, opts.frontEnd.modulesDir, opts.nameMap)
+                    .then(function (result) {
+                    if (result.errList.length) {
+                        console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);
+                        return false;
                     }
-                    return utils_1.default.copyBackToFront(opts.cloneDest + B2F, opts.backEnd, opts.frontEnd.extension, opts.frontEnd.subDir, opts.frontEnd.pagesDir, opts.frontEnd.modulesDir, opts.nameMap)
-                        .then(function (result) {
-                        if (result.errList.length) {
-                            console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);
-                            return false;
-                        }
-                        utils_1.default.launchBC(opts.beyondComparePath, opts.cloneDest + B2F, opts.frontEnd.rootDir);
-                        console.log(utils_1.default.getBeyondCompareMessage('Back to front', "magenta", "bgMagenta"));
-                        return true;
-                    });
-                },
-                type: 'confirm',
-                name: 'frontToBack',
-                message: chalk.cyan('Ok to clone "front to back" into ') + chalk.bgCyan.white('"' + this.opts.cloneDest + F2B + '"') + chalk.cyan("?"),
-                default: true
+                    utils_1.default.launchBC(opts.beyondComparePath, opts.cloneDest + B2F, opts.frontEnd.rootDir);
+                    console.log(utils_1.default.getBeyondCompareMessage('Back to front', "magenta", "bgMagenta"));
+                    return true;
+                });
             },
-            {
-                when: function (res) {
-                    if (!res.frontToBack || !res.beyondCompare) {
+            type: 'confirm',
+            name: 'frontToBack',
+            message: chalk.cyan('Ok to clone "front to back" into ') + chalk.bgCyan.white('"' + this.opts.cloneDest + F2B + '"') + chalk.cyan("?"),
+            default: true
+        }, {
+            when: function (res) {
+                if (!res.frontToBack || !res.beyondCompare) {
+                    if (!res.beyondCompare)
+                        console.warn(chalk.red("You answered 'No' having Beyond Compare installed on the command-line. Skipping step."));
+                    else if (!res.frontToBack)
                         console.warn(chalk.red("You answered 'No' to merging 'front to back'. Skipping step."));
-                        return true;
+                    return true;
+                }
+                return utils_1.default.copyFrontToBack(opts.cloneDest + F2B, opts.frontEnd, opts.backEnd.extension, opts.backEnd.subDir, opts.backEnd.pagesDir, opts.backEnd.modulesDir, opts.nameMap)
+                    .then(function (result) {
+                    if (result.errList.length) {
+                        console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);
+                        return false;
                     }
-                    return utils_1.default.copyFrontToBack(opts.cloneDest + F2B, opts.frontEnd, opts.backEnd.extension, opts.backEnd.subDir, opts.backEnd.pagesDir, opts.backEnd.modulesDir, opts.nameMap)
-                        .then(function (result) {
-                        if (result.errList.length) {
-                            console.warn(chalk.red("Some files could not be found. Stopping early."), result.errList);
-                            return false;
-                        }
-                        utils_1.default.launchBC(opts.beyondComparePath, opts.cloneDest + F2B, opts.backEnd.rootDir);
-                        console.log(utils_1.default.getBeyondCompareMessage('Front to back', "cyan", "bgCyan"));
-                        return true;
-                    });
-                },
-                type: 'confirm',
-                name: 'frontToBack',
-                message: chalk.magenta("When you're done with forwards merge, press enter to run final step."),
-                default: true
-            }
-        ]);
+                    utils_1.default.launchBC(opts.beyondComparePath, opts.cloneDest + F2B, opts.backEnd.rootDir);
+                    console.log(utils_1.default.getBeyondCompareMessage('Front to back', "cyan", "bgCyan"));
+                    return true;
+                });
+            },
+            type: 'confirm',
+            name: 'frontToBack',
+            message: chalk.magenta("When you're done with forwards merge, press enter to run final step."),
+            default: true
+        });
+        return inquirer.prompt(questions);
     };
     return Questions;
 }());

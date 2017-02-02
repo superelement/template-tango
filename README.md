@@ -57,6 +57,7 @@ tt.startQuestions({
 		pages: [{ backEnd: "DashboardPage/Home", frontEnd: "Dashboard/tmpl/Index" }],
 		modules: [{ backEnd: "AppNav/Index", frontEnd: "TopNav/tmpl/TopNav" }]
 	}
+	//, skipBCConfirm: true // use this to skip the first question asking you if you have Beyond Compare installed
 }, function() {
 	console.log("Now do other stuff for your production build");
 })

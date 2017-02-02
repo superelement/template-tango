@@ -5,7 +5,8 @@ export interface IMergeOptions {
     completeCB: Function;
     backEnd: IMergableFiles;
     frontEnd: IMergableFiles;
-    nameMap?: INameMapGroup
+    nameMap?: INameMapGroup;
+    skipBCConfirm?: boolean;
 }
 
 export interface IMergableFiles {
